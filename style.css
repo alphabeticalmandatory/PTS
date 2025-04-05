@@ -1,260 +1,149 @@
-/* Simple Material UI Inspired Palette */
-:root {
-    --primary-color: #3f51b5; /* Indigo */
-    --primary-dark: #303f9f;
-    --accent-color: #ff4081; /* Pink */
-    --text-color: #212121;
-    --secondary-text-color: #757575;
-    --background-color: #f5f5f5;
-    --card-background: #ffffff;
-    --border-color: #e0e0e0;
-    --input-border-color: #bdbdbd;
-}
+/* --- Previous styles remain the same --- */
 
-body {
-    font-family: 'Roboto', sans-serif; /* Add Roboto font link in head or use fallback */
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* System fonts fallback */
-    margin: 0;
-    padding: 20px;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    line-height: 1.6;
+/* Date Picker / Breadcrumbs Section */
+.controls .form-row {
+    align-items: flex-end; /* Align items nicely */
 }
-
-.container {
-    max-width: 900px;
-    margin: 0 auto;
-    background-color: var(--card-background);
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+.breadcrumb-container {
+    flex-grow: 2; /* Allow more space */
 }
-
-header {
+#breadcrumbs {
+    padding: 8px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    min-height: 38px; /* Match input height */
     display: flex;
-    align-items: center;
-    justify-content: center; /* Center title */
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 20px;
-    position: relative; /* For absolute positioning icon */
+    flex-wrap: wrap;
+    gap: 5px;
+    background-color: #f9f9f9; /* Light background */
+}
+#breadcrumbs button {
+    background: none;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 2px 8px;
+    border-radius: 12px; /* Pill shape */
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+#breadcrumbs button:hover,
+#breadcrumbs button.active { /* Style for active/selected date */
+    background-color: var(--primary-color);
+    color: white;
 }
 
-header h1 {
-    color: var(--primary-dark);
-    margin: 0;
-    font-weight: 500;
-    text-align: center;
-    flex-grow: 1; /* Allow title to take space */
+
+/* Horizontal Subject Layout */
+.subjects-wrapper {
+    display: flex;
+    gap: 15px; /* Space between subject cards */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    padding-bottom: 10px; /* Add some padding for scrollbar */
 }
 
-header .icon {
-    font-size: 1.8em;
-    position: absolute; /* Position icon */
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+.subject-section {
+    flex: 1 1 400px; /* Allow shrinking, growing, base width */
+    min-width: 350px; /* Prevent cards from becoming too narrow */
+    /* Adjust max-width if needed */
+    /* max-width: 450px; */
+    margin-bottom: 0; /* Remove bottom margin as gap handles it */
+    display: flex; /* Use flexbox for internal layout */
+    flex-direction: column; /* Stack elements vertically */
 }
 
-/* Optional Logo Styling */
+/* Ensure content within subject sections grows */
+.subject-section .topics,
+.subject-section .learnings {
+    flex-grow: 1;
+}
+.subject-section .learnings textarea {
+    min-height: 80px; /* Ensure textarea has some height */
+    display: flex; /* Help with flex layout */
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+
+/* Readonly input styling */
+input[readonly] {
+    background-color: #eeeeee; /* Light grey background */
+    cursor: not-allowed;
+    /* Optional: remove focus outline for readonly */
+    /* outline: none;
+    box-shadow: none;
+    border-color: var(--input-border-color); */
+}
+
+/* Make summary inputs slightly smaller */
+.performance-summary input {
+    min-width: 70px;
+    flex-basis: 70px; /* Give them a base width */
+    font-size: 0.9em;
+}
+
+
+/* Styles for Image Download */
+/* Optional: Hide buttons during capture if desired */
 /*
-header .logo {
-    height: 40px;
-    margin-right: 15px;
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+body.capturing .actions {
+    display: none;
+}
+body.capturing input,
+body.capturing textarea {
+    border: 1px solid transparent; // Make borders invisible
+    box-shadow: none;
+}
+body.capturing input[readonly] {
+     background-color: transparent;
 }
 */
 
-.card {
-    background-color: var(--card-background);
-    /* Remove background for inner cards if container has one */
-    /* background-color: transparent; */
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    /* box-shadow: 0 1px 3px rgba(0,0,0,0.05); */
+/* Responsive adjustments may need tuning for horizontal layout */
+@media (max-width: 1600px) { /* Adjust breakpoint as needed */
+   .subject-section {
+        min-width: 320px;
+        flex-basis: 350px;
+   }
 }
 
-.student-info .form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px; /* Spacing between items */
-    margin-bottom: 10px;
+@media (max-width: 1200px) {
+    /* Maybe stack subjects vertically again on smaller screens */
+    /* .subjects-wrapper {
+        flex-direction: column;
+        overflow-x: hidden;
+    }
+    .subject-section {
+        min-width: unset;
+        flex-basis: auto;
+        width: 100%;
+        margin-bottom: 15px;
+    } */
+     .performance-summary input {
+        min-width: 60px;
+        flex-basis: 60px;
+    }
 }
 
-.student-info .form-group {
-    flex: 1; /* Allow items to grow */
-    min-width: 150px; /* Prevent items from becoming too small */
-    display: flex;
-    flex-direction: column; /* Stack label and input */
-}
-
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--secondary-text-color);
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-input[type="text"],
-input[type="number"],
-textarea {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    font-size: 1em;
-    box-sizing: border-box; /* Include padding and border in width */
-}
-
-input[type="number"] {
-   /* Adjust width if needed, especially for summary */
-}
-
-textarea {
-    resize: vertical; /* Allow vertical resizing */
-    min-height: 60px;
-}
-
-input:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
-}
-
-.subject-section h2 {
-    text-align: center;
-    background-color: var(--primary-color);
-    color: white;
-    padding: 8px 0;
-    margin: -15px -15px 15px -15px; /* Extend to card edges */
-    border-radius: 4px 4px 0 0;
-    font-size: 1.2em;
-    font-weight: 500;
-}
-
-.performance-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed var(--border-color);
-}
-
-.performance-summary input {
-    flex: 1;
-    min-width: 80px; /* Ensure inputs don't get too squished */
-    text-align: center;
-}
-
-.topics {
-    display: flex;
-    gap: 20px; /* Space between topic columns */
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed var(--border-color);
-}
-
-.topic-list {
-    flex: 1; /* Each column takes equal space */
-}
-
-.topic-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 0.95em;
-    color: var(--secondary-text-color);
-}
-
-.topic-list li {
-    margin-bottom: 4px;
-    padding-left: 15px; /* Indentation */
-    position: relative;
-}
-/* Simple bullet point */
-.topic-list li::before {
-    content: '•';
-    position: absolute;
-    left: 0;
-    color: var(--primary-color);
-}
-
-.learnings label {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.learnings textarea {
-    width: 100%;
-    margin-top: 5px;
-}
-
-.actions {
-    text-align: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-}
-
-button {
-    padding: 10px 20px;
-    margin: 0 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s ease;
-}
-
-#saveButton {
-    background-color: var(--primary-color);
-    color: white;
-}
-#saveButton:hover {
-    background-color: var(--primary-dark);
-}
-
-#loadButton {
-    background-color: var(--accent-color);
-    color: white;
-}
-#loadButton:hover {
-     background-color: #c51162; /* Darker Pink */
-}
-
-#clearButton {
-    background-color: var(--secondary-text-color);
-    color: white;
-}
-#clearButton:hover {
-    background-color: #616161; /* Darker Grey */
-}
-
-/* Responsive Adjustments (Optional Simple Example) */
 @media (max-width: 768px) {
-    .student-info .form-row, .performance-summary {
-        flex-direction: column; /* Stack items vertically on smaller screens */
+     .subjects-wrapper {
+        flex-direction: column; /* Stack vertically */
+        overflow-x: hidden;
+    }
+    .subject-section {
+        min-width: unset;
+        flex-basis: auto;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .controls .form-row {
+        flex-direction: column;
+        align-items: stretch; /* Stretch items */
          gap: 10px;
     }
-     .performance-summary input {
-        min-width: 100%; /* Full width when stacked */
-    }
-    .topics {
-        flex-direction: column;
-    }
-    header h1 {
-        font-size: 1.5em;
-    }
-    header .icon {
-        font-size: 1.5em;
-    }
+     .breadcrumb-container {
+        margin-top: 10px;
+     }
 }
+
+/* --- Remaining styles --- */
