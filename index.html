@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTS Report Card</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Include html2canvas library -->
+    <!-- Include html2canvas library (needed for both image and potentially PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Include jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-    <div class="container" id="reportCardContainer"> <!-- Added ID for image capture -->
+    <!-- Container for content to be captured -->
+    <div class="container" id="reportCardContainer">
         <header>
             <h1>PTS REPORT CARD</h1>
             <span class="icon">📄</span>
@@ -26,11 +29,30 @@
                      <nav id="breadcrumbs"></nav>
                  </div>
             </div>
+            <!-- Marking Scheme Settings -->
+             <div class="form-row marking-scheme">
+                 <div class="form-group">
+                     <label>Marks per Question:</label>
+                     <div class="radio-group" id="marksPerQuestionGroup">
+                         <label><input type="radio" name="marksPerQuestion" value="2" checked> 2</label>
+                         <label><input type="radio" name="marksPerQuestion" value="3"> 3</label>
+                         <!-- Add more if needed -->
+                     </div>
+                 </div>
+                 <div class="form-group">
+                    <label>Negative Marking:</label>
+                     <div class="radio-group" id="negativeMarkingGroup">
+                         <label><input type="radio" name="negativeMarking" value="0"> None</label>
+                         <label><input type="radio" name="negativeMarking" value="1/4"> 1/4</label>
+                         <label><input type="radio" name="negativeMarking" value="1/3"> 1/3</label>
+                         <label><input type="radio" name="negativeMarking" value="1/2" checked> 1/2</label>
+                     </div>
+                </div>
+             </div>
         </section>
 
 
         <section class="card student-info">
-             <!-- Same fields as before: Name, Mock No., Rank, Total Marks, Percentile -->
              <div class="form-row">
                 <div class="form-group">
                     <label for="studentName">Name:</label>
@@ -48,7 +70,8 @@
                 </div>
                  <div class="form-group">
                     <label for="totalMarks">Total Marks:</label>
-                    <input type="number" id="totalMarks">
+                    <!-- Readonly, calculated -->
+                    <input type="number" id="totalMarks" readonly class="calculated-field">
                 </div>
                 <div class="form-group">
                     <label for="percentile">Percentile:</label>
@@ -63,44 +86,21 @@
             <section class="card subject-section" data-subject="maths">
                 <h2>MATHS</h2>
                 <div class="performance-summary">
-                    <input type="number" class="qs-total" id="mathsQuestions" placeholder="No. Qs" readonly> <!-- Readonly -->
-                    <input type="number" class="qs-attempted" id="mathsAttempted" placeholder="Attempted">
-                    <input type="number" class="qs-not-attempted" id="mathsNotAttempted" placeholder="Not Attempted">
-                    <input type="number" class="qs-correct" id="mathsCorrect" placeholder="Correct">
-                    <input type="number" class="qs-incorrect" id="mathsIncorrect" placeholder="Incorrect">
-                    <input type="text" id="mathsTime" placeholder="Time">
-                    <input type="number" id="mathsMarks" placeholder="Marks">
+                    <!-- User Inputs -->
+                    <input type="number" class="qs-total user-input" min="0" placeholder="Total Qs">
+                    <input type="number" class="qs-attempted user-input" min="0" placeholder="Attempted">
+                    <input type="number" class="qs-correct user-input" min="0" placeholder="Correct">
+                    <!-- Calculated Displays -->
+                    <span class="calc-label">Incorrect: <output class="calc-incorrect calculated-field">0</output></span>
+                    <span class="calc-label">Not Attempted: <output class="calc-not-attempted calculated-field">0</output></span>
+                     <!-- Time & Marks -->
+                    <input type="text" class="subj-time" placeholder="Time">
+                    <input type="number" class="subj-marks calculated-field" placeholder="Marks" readonly>
                 </div>
-                <div class="topics">
-                    <!-- Topic lists remain the same -->
-                     <div class="topic-list">
-                        <ul>
-                            <li>PERCENTAGE</li>
-                            <li>PROFIT LOSS & DISCOUNT</li>
-                            <li>RATIO & PROPORTION</li>
-                            <li>MIXTURE & ALLIGATION</li>
-                            <li>AVERAGE</li>
-                            <li>TIME & WORK</li>
-                            <li>TIME, SPEED, DISTANCE</li>
-                            <li>GEOMETRY</li>
-                            <li>SIMPLIFICATION</li>
-                            <li>NUMBER SYSTEM</li>
-                        </ul>
-                    </div>
-                     <div class="topic-list">
-                         <ul>
-                            <li>ALGEBRA</li>
-                            <li>TRIGONOMETRY</li>
-                            <li>MENSURATION</li>
-                            <li>LOGS & HCF</li>
-                            <li>DATA INTERPRETATION</li>
-                            <li>C.I./S.I.</li>
-                        </ul>
-                    </div>
-                </div>
+                <!-- Removed Topics Div -->
                 <div class="learnings">
-                    <label for="mathsLearnings">Learnings / What went wrong:</label>
-                    <textarea id="mathsLearnings" rows="4"></textarea>
+                    <label>Learnings / What went wrong:</label>
+                    <textarea class="subj-learnings" rows="5"></textarea> <!-- Increased rows slightly -->
                 </div>
             </section>
 
@@ -108,38 +108,17 @@
             <section class="card subject-section" data-subject="eng">
                 <h2>ENGLISH</h2>
                  <div class="performance-summary">
-                    <input type="number" class="qs-total" id="engQuestions" placeholder="No. Qs" readonly>
-                    <input type="number" class="qs-attempted" id="engAttempted" placeholder="Attempted">
-                    <input type="number" class="qs-not-attempted" id="engNotAttempted" placeholder="Not Attempted">
-                    <input type="number" class="qs-correct" id="engCorrect" placeholder="Correct">
-                    <input type="number" class="qs-incorrect" id="engIncorrect" placeholder="Incorrect">
-                    <input type="text" id="engTime" placeholder="Time">
-                    <input type="number" id="engMarks" placeholder="Marks">
-                </div>
-                 <div class="topics">
-                    <!-- Topic lists remain the same -->
-                    <div class="topic-list">
-                        <ul>
-                            <li>ERROR</li>
-                            <li>SENTENCE IMPROVEMENT</li>
-                            <li>FILL IN THE BLANKS</li>
-                            <li>VOICE</li>
-                            <li>NARRATION</li>
-                            <li>ANTONYMS</li>
-                            <li>SYNONYMS</li>
-                        </ul>
-                    </div>
-                     <div class="topic-list">
-                         <ul>
-                            <li>IDIOMS & PHRASES</li>
-                            <li>CLOZE TEST</li>
-                            <li>READING COMPREHENSION</li>
-                         </ul>
-                    </div>
+                    <input type="number" class="qs-total user-input" min="0" placeholder="Total Qs">
+                    <input type="number" class="qs-attempted user-input" min="0" placeholder="Attempted">
+                    <input type="number" class="qs-correct user-input" min="0" placeholder="Correct">
+                    <span class="calc-label">Incorrect: <output class="calc-incorrect calculated-field">0</output></span>
+                    <span class="calc-label">Not Attempted: <output class="calc-not-attempted calculated-field">0</output></span>
+                    <input type="text" class="subj-time" placeholder="Time">
+                    <input type="number" class="subj-marks calculated-field" placeholder="Marks" readonly>
                 </div>
                 <div class="learnings">
-                    <label for="engLearnings">Learnings / Rules to Remember:</label>
-                    <textarea id="engLearnings" rows="4"></textarea>
+                    <label>Learnings / Rules to Remember:</label>
+                    <textarea class="subj-learnings" rows="5"></textarea>
                 </div>
             </section>
 
@@ -147,35 +126,17 @@
             <section class="card subject-section" data-subject="gkgs">
                 <h2>GK/GS</h2>
                  <div class="performance-summary">
-                    <input type="number" class="qs-total" id="gkgsQuestions" placeholder="No. Qs" readonly>
-                    <input type="number" class="qs-attempted" id="gkgsAttempted" placeholder="Attempted">
-                    <input type="number" class="qs-not-attempted" id="gkgsNotAttempted" placeholder="Not Attempted">
-                    <input type="number" class="qs-correct" id="gkgsCorrect" placeholder="Correct">
-                    <input type="number" class="qs-incorrect" id="gkgsIncorrect" placeholder="Incorrect">
-                    <input type="text" id="gkgsTime" placeholder="Time">
-                    <input type="number" id="gkgsMarks" placeholder="Marks">
-                </div>
-                <div class="topics">
-                   <!-- Topic lists remain the same -->
-                   <div class="topic-list">
-                        <ul>
-                            <li>HISTORY</li>
-                            <li>GEOGRAPHY</li>
-                            <li>POLITY</li>
-                            <li>SCIENCE</li>
-                            <li>ECONOMICS</li>
-                            <li>STATIC GK</li>
-                        </ul>
-                    </div>
-                     <div class="topic-list">
-                         <ul>
-                            <li>CURRENT AFFAIRS</li>
-                         </ul>
-                    </div>
+                    <input type="number" class="qs-total user-input" min="0" placeholder="Total Qs">
+                    <input type="number" class="qs-attempted user-input" min="0" placeholder="Attempted">
+                    <input type="number" class="qs-correct user-input" min="0" placeholder="Correct">
+                    <span class="calc-label">Incorrect: <output class="calc-incorrect calculated-field">0</output></span>
+                    <span class="calc-label">Not Attempted: <output class="calc-not-attempted calculated-field">0</output></span>
+                    <input type="text" class="subj-time" placeholder="Time">
+                    <input type="number" class="subj-marks calculated-field" placeholder="Marks" readonly>
                 </div>
                  <div class="learnings">
-                    <label for="gkgsLearnings">Learnings / Worth it to Note:</label>
-                    <textarea id="gkgsLearnings" rows="4"></textarea>
+                    <label>Learnings / Worth it to Note:</label>
+                    <textarea class="subj-learnings" rows="5"></textarea>
                 </div>
             </section>
 
@@ -183,63 +144,32 @@
             <section class="card subject-section" data-subject="reas">
                 <h2>REASONING</h2>
                  <div class="performance-summary">
-                    <input type="number" class="qs-total" id="reasQuestions" placeholder="No. Qs" readonly>
-                    <input type="number" class="qs-attempted" id="reasAttempted" placeholder="Attempted">
-                    <input type="number" class="qs-not-attempted" id="reasNotAttempted" placeholder="Not Attempted">
-                    <input type="number" class="qs-correct" id="reasCorrect" placeholder="Correct">
-                    <input type="number" class="qs-incorrect" id="reasIncorrect" placeholder="Incorrect">
-                    <input type="text" id="reasTime" placeholder="Time">
-                    <input type="number" id="reasMarks" placeholder="Marks">
-                </div>
-                <div class="topics">
-                    <!-- Topic lists remain the same -->
-                     <div class="topic-list">
-                        <ul>
-                            <li>NUMBER SERIES</li>
-                            <li>ALPHABET SERIES</li>
-                            <li>ANALOGY</li>
-                            <li>SYLLOGISM</li>
-                            <li>MIRROR / WATER IMAGE</li>
-                            <li>DICTIONARY</li>
-                            <li>CLASSIFICATIONS</li>
-                            <li>DICE</li>
-                            <li>FIGURE RELATED</li>
-                            <li>ODD ONE OUT</li>
-                            <li>CLOCK</li>
-                        </ul>
-                    </div>
-                     <div class="topic-list">
-                         <ul>
-                            <li>BODMASS</li>
-                            <li>BLOOD RELATION</li>
-                            <li>NUMBER CODING</li>
-                            <li>CALENDAR</li>
-                            <li>MATRIX</li>
-                            <li>MATHEMATICAL OPERATIONS</li>
-                            <li>WORD CODING</li>
-                            <li>RANKING/SITTING ARRANGEMENT</li>
-                            <li>VENN DIAGRAM</li>
-                         </ul>
-                    </div>
+                    <input type="number" class="qs-total user-input" min="0" placeholder="Total Qs">
+                    <input type="number" class="qs-attempted user-input" min="0" placeholder="Attempted">
+                    <input type="number" class="qs-correct user-input" min="0" placeholder="Correct">
+                    <span class="calc-label">Incorrect: <output class="calc-incorrect calculated-field">0</output></span>
+                    <span class="calc-label">Not Attempted: <output class="calc-not-attempted calculated-field">0</output></span>
+                    <input type="text" class="subj-time" placeholder="Time">
+                    <input type="number" class="subj-marks calculated-field" placeholder="Marks" readonly>
                 </div>
                 <div class="learnings">
-                    <label for="reasLearnings">Learnings / Tricks to Remember:</label>
-                    <textarea id="reasLearnings" rows="4"></textarea>
+                    <label>Learnings / Tricks to Remember:</label>
+                    <textarea class="subj-learnings" rows="5"></textarea>
                 </div>
             </section>
         </div> <!-- /subjects-wrapper -->
 
-        <!-- Action buttons outside the main capture area if preferred -->
-    </div> <!-- /container -->
+    </div> <!-- /reportCardContainer -->
 
+    <!-- Action buttons -->
     <section class="actions card">
             <button id="saveButton">Save Current Date Data</button>
-            <!-- Load is now triggered by date picker/breadcrumbs -->
             <button id="clearButton">Clear Current Form</button>
             <button id="downloadButton">Download as Image</button>
+            <button id="downloadPdfButton">Download as PDF</button>
             <!-- Optional: <button id="clearHistoryButton">Clear All Saved Data</button> -->
     </section>
 
     <script src="script.js"></script>
 </body>
-</html>
+    </html>
