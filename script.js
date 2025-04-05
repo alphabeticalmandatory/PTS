@@ -1,17 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Global Settings ---
     const storagePrefix = 'ptsReportCard_'; // Prefix for localStorage keys
+    // Use the UMD global name for jsPDF
+    const { jsPDF } = window.jspdf;
+    if (typeof jsPDF === 'undefined') {
+        console.error("jsPDF library not found. Make sure it's included.");
+    }
+     if (typeof html2canvas === 'undefined') {
+        console.error("html2canvas library not found. Make sure it's included.");
+    }
+
 
     // --- Element Selectors ---
     const reportDateInput = document.getElementById('reportDate');
     const breadcrumbsContainer = document.getElementById('breadcrumbs');
-    const reportCardContainer = document.getElementById('reportCardContainer'); // For image capture
+    const reportCardContainer = document.getElementById('reportCardContainer'); // For capture
 
     // General Info
     const studentName = document.getElementById('studentName');
     const mockNo = document.getElementById('mockNo');
     const rank = document.getElementById('rank');
-    const totalMarks = document.getElementById('totalMarks');
+    const totalMarksInput = document.getElementById('totalMarks'); // Renamed for clarity
     const percentile = document.getElementById('percentile');
+
+    // Marking Scheme Controls
+    const marksPerQuestionGroup = document.getElementById('marksPerQuestionGroup');
+    const negativeMarkingGroup = document.getElementById('negativeMarkingGroup');
 
     // Subject Sections (used for looping)
     const subjectSections = document.querySelectorAll('.subject-section');
@@ -19,14 +33,111 @@ document.addEventListener('DOMContentLoaded', () => {
     // Buttons
     const saveButton = document.getElementById('saveButton');
     const clearButton = document.getElementById('clearButton');
-    const downloadButton = document.getElementById('downloadButton');
+    const downloadButton = document.getElementById('downloadButton'); // Image download
+    const downloadPdfButton = document.getElementById('downloadPdfButton'); // PDF download
 
     // --- Utility Functions ---
-    const getNumericValue = (element) => parseInt(element.value, 10) || 0;
+    const getNumericValue = (element, defaultValue = 0) => {
+        if (!element) return defaultValue;
+        const value = parseInt(element.value, 10);
+        return isNaN(value) ? defaultValue : value;
+    };
+
+    const getFloatValue = (element, defaultValue = 0.0) => {
+        if (!element) return defaultValue;
+        const value = parseFloat(element.value);
+        return isNaN(value) ? defaultValue : value;
+    }
 
     const getCurrentDateKey = () => {
         const dateValue = reportDateInput.value;
         return dateValue ? `${storagePrefix}${dateValue}` : null;
+    };
+
+    const getMarkingSettings = () => {
+        const marksPerQElement = marksPerQuestionGroup.querySelector('input[name="marksPerQuestion"]:checked');
+        const negMarkingElement = negativeMarkingGroup.querySelector('input[name="negativeMarking"]:checked');
+
+        const marksPerQ = marksPerQElement ? parseFloat(marksPerQElement.value) : 2; // Default to 2
+
+        let negMarkingRatio = 0; // Default to None
+        if (negMarkingElement) {
+            const val = negMarkingElement.value;
+            if (val === '1/2') negMarkingRatio = 0.5;
+            else if (val === '1/3') negMarkingRatio = 1/3;
+            else if (val === '1/4') negMarkingRatio = 0.25;
+            // else remains 0 for '0' (None)
+        }
+        return { marksPerQ, negMarkingRatio };
+    };
+
+     // --- Calculation Functions ---
+
+    const calculateSubjectMetrics = (subjectSection) => {
+        // Get user inputs
+        const totalQsInput = subjectSection.querySelector('.qs-total');
+        const attemptedInput = subjectSection.querySelector('.qs-attempted');
+        const correctInput = subjectSection.querySelector('.qs-correct');
+
+        // Get output elements
+        const incorrectOutput = subjectSection.querySelector('.calc-incorrect');
+        const notAttemptedOutput = subjectSection.querySelector('.calc-not-attempted');
+        const marksOutput = subjectSection.querySelector('.subj-marks'); // The readonly input
+
+        if (!totalQsInput || !attemptedInput || !correctInput || !incorrectOutput || !notAttemptedOutput || !marksOutput) {
+             console.warn('Missing elements in subject section:', subjectSection.dataset.subject);
+             return 0; // Return 0 marks if elements are missing
+        }
+
+        let totalQs = getNumericValue(totalQsInput);
+        let attemptedQs = getNumericValue(attemptedInput);
+        let correctQs = getNumericValue(correctInput);
+
+        // --- Validation and Correction ---
+        // 1. Correct cannot be more than attempted
+        if (correctQs > attemptedQs) {
+            correctQs = attemptedQs;
+            correctInput.value = correctQs; // Update UI
+            // Optionally add a visual cue like a red border temporarily
+            // correctInput.style.borderColor = 'red'; setTimeout(() => correctInput.style.borderColor = '', 1500);
+        }
+         // 2. Attempted cannot be more than total
+        if (attemptedQs > totalQs) {
+            attemptedQs = totalQs;
+            attemptedInput.value = attemptedQs;
+             // If attempted changed, re-check correct
+             if (correctQs > attemptedQs) {
+                 correctQs = attemptedQs;
+                 correctInput.value = correctQs;
+             }
+        }
+
+        // --- Calculations ---
+        const incorrectQs = Math.max(0, attemptedQs - correctQs);
+        const notAttemptedQs = Math.max(0, totalQs - attemptedQs);
+
+        // Display calculated question counts
+        incorrectOutput.textContent = incorrectQs;
+        notAttemptedOutput.textContent = notAttemptedQs;
+
+        // Calculate Marks
+        const { marksPerQ, negMarkingRatio } = getMarkingSettings();
+        const positiveMarks = correctQs * marksPerQ;
+        const negativeMarks = incorrectQs * marksPerQ * negMarkingRatio;
+        const subjectMarks = positiveMarks - negativeMarks;
+
+        marksOutput.value = subjectMarks.toFixed(2); // Display marks with 2 decimal places
+
+        return subjectMarks; // Return the calculated marks for overall total
+    };
+
+    const calculateOverallTotalMarks = () => {
+        let overallTotal = 0;
+        subjectSections.forEach(section => {
+            // Re-run calculation for each section to ensure consistency and get marks
+            overallTotal += calculateSubjectMetrics(section);
+        });
+        totalMarksInput.value = overallTotal.toFixed(2);
     };
 
     // --- Form Handling ---
@@ -36,62 +147,73 @@ document.addEventListener('DOMContentLoaded', () => {
         studentName.value = '';
         mockNo.value = '';
         rank.value = '';
-        totalMarks.value = '';
+        totalMarksInput.value = ''; // Clear calculated total marks
         percentile.value = '';
 
         // Clear subject sections
         subjectSections.forEach(section => {
-            section.querySelectorAll('input, textarea').forEach(input => {
-                 // Don't clear the readonly total questions input by direct user action
-                 if (!input.readOnly) {
-                    input.value = '';
-                 }
-            });
-             // Explicitly clear readonly fields too during a full clear
+            // Clear user inputs
             section.querySelector('.qs-total').value = '';
-             // Re-trigger calculations to ensure consistency if needed (optional here)
-             // calculateAttempted(section);
-             // calculateTotalQuestions(section);
+            section.querySelector('.qs-attempted').value = '';
+            section.querySelector('.qs-correct').value = '';
+            section.querySelector('.subj-time').value = '';
+            section.querySelector('.subj-learnings').value = '';
+
+            // Clear calculated displays/outputs
+            section.querySelector('.calc-incorrect').textContent = '0';
+            section.querySelector('.calc-not-attempted').textContent = '0';
+            section.querySelector('.subj-marks').value = ''; // Clear readonly marks input
         });
 
-        // Optionally reset date picker? Or keep it for potentially saving a cleared state?
-        // reportDateInput.value = ''; // Decide if you want this
+        // Reset marking scheme to default? Optional. Let's reset to defaults defined in HTML.
+        marksPerQuestionGroup.querySelector('input[value="2"]').checked = true;
+        negativeMarkingGroup.querySelector('input[value="1/2"]').checked = true;
+
+
         console.log('Form fields cleared.');
         setActiveBreadcrumb(null); // Deselect breadcrumb
+        // Trigger calculation to ensure all calculated fields reflect the cleared state (mostly zeros)
+        // calculateOverallTotalMarks(); // Should result in 0
     };
 
     const populateForm = (data) => {
-        clearFormFields(); // Start with a clean slate before populating
+        clearFormFields(); // Start clean
 
         // Populate Student Info
         if (data.studentInfo) {
             studentName.value = data.studentInfo.name || '';
             mockNo.value = data.studentInfo.mockNo || '';
             rank.value = data.studentInfo.rank || '';
-            totalMarks.value = data.studentInfo.totalMarks || '';
+            // totalMarksInput is calculated, so don't load it directly
             percentile.value = data.studentInfo.percentile || '';
         }
 
-        // Populate Subject Sections
+        // Populate Marking Scheme Settings
+         if (data.settings) {
+             const mpqRadio = marksPerQuestionGroup.querySelector(`input[value="${data.settings.marksPerQ}"]`);
+             if (mpqRadio) mpqRadio.checked = true;
+
+             const nmRadio = negativeMarkingGroup.querySelector(`input[value="${data.settings.negMarking}"]`);
+              if (nmRadio) nmRadio.checked = true;
+         }
+
+
+        // Populate Subject Sections (User Inputs Only)
         subjectSections.forEach(section => {
-            const subjectKey = section.dataset.subject; // e.g., 'maths', 'eng'
+            const subjectKey = section.dataset.subject;
             const subjectData = data[subjectKey];
 
             if (subjectData) {
-                // Populate manually entered fields first
+                section.querySelector('.qs-total').value = subjectData.total || '';
                 section.querySelector('.qs-attempted').value = subjectData.attempted || '';
-                section.querySelector('.qs-not-attempted').value = subjectData.notAttempted || '';
                 section.querySelector('.qs-correct').value = subjectData.correct || '';
-                section.querySelector('.qs-incorrect').value = subjectData.incorrect || '';
-                section.querySelector(`#${subjectKey}Time`).value = subjectData.time || '';
-                section.querySelector(`#${subjectKey}Marks`).value = subjectData.marks || '';
-                section.querySelector(`#${subjectKey}Learnings`).value = subjectData.learnings || '';
-
-                 // Trigger calculations to fill readonly fields
-                 calculateTotalQuestions(section);
-                 calculateAttempted(section); // Call this second to ensure Attempted reflects C+I
+                section.querySelector('.subj-time').value = subjectData.time || '';
+                section.querySelector('.subj-learnings').value = subjectData.learnings || '';
             }
         });
+
+        // Trigger calculations AFTER all inputs and settings are populated
+        calculateOverallTotalMarks();
     };
 
 
@@ -104,29 +226,35 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const currentSettings = getMarkingSettings(); // Get current radio button selections
+        const selectedMpq = marksPerQuestionGroup.querySelector('input[name="marksPerQuestion"]:checked')?.value || '2';
+        const selectedNegMark = negativeMarkingGroup.querySelector('input[name="negativeMarking"]:checked')?.value || '1/2';
+
+
         const data = {
             studentInfo: {
                 name: studentName.value,
                 mockNo: mockNo.value,
                 rank: rank.value,
-                totalMarks: totalMarks.value,
                 percentile: percentile.value,
+                // DO NOT save totalMarks - it's calculated
+            },
+            settings: { // Save the marking scheme settings
+                marksPerQ: selectedMpq,
+                negMarking: selectedNegMark
             },
         };
 
         subjectSections.forEach(section => {
             const subjectKey = section.dataset.subject;
             data[subjectKey] = {
-                // Store the calculated values too for completeness? Or just inputs?
-                // Storing inputs is safer if calculation logic changes.
-                // total: section.querySelector('.qs-total').value, // Calculated
+                // Store ONLY user inputs
+                total: section.querySelector('.qs-total').value,
                 attempted: section.querySelector('.qs-attempted').value,
-                notAttempted: section.querySelector('.qs-not-attempted').value,
                 correct: section.querySelector('.qs-correct').value,
-                incorrect: section.querySelector('.qs-incorrect').value,
-                time: section.querySelector(`#${subjectKey}Time`).value,
-                marks: section.querySelector(`#${subjectKey}Marks`).value,
-                learnings: section.querySelector(`#${subjectKey}Learnings`).value,
+                time: section.querySelector('.subj-time').value,
+                learnings: section.querySelector('.subj-learnings').value,
+                // DO NOT store calculated: incorrect, notAttempted, marks
             };
         });
 
@@ -134,10 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             localStorage.setItem(currentDateKey, JSON.stringify(data));
             alert(`Data saved for ${reportDateInput.value}!`);
-            populateBreadcrumbs(); // Update breadcrumbs in case it's a new date
+            populateBreadcrumbs(); // Update breadcrumbs
             setActiveBreadcrumb(reportDateInput.value); // Keep current date active
-            // Don't clear form automatically - user might want to tweak and re-save
-            // clearFormFields(); // Removed: Clear only if explicitly requested
         } catch (error) {
             console.error('Error saving data to localStorage:', error);
             alert('Error saving data. LocalStorage might be full or disabled.');
@@ -147,8 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadData = () => {
         const currentDateKey = getCurrentDateKey();
         if (!currentDateKey) {
-            // console.log('No date selected, clearing form.');
-            clearFormFields(); // Clear form if no date is selected
+            clearFormFields();
             setActiveBreadcrumb(null);
             return;
         }
@@ -159,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = JSON.parse(savedData);
                 populateForm(data);
                 setActiveBreadcrumb(reportDateInput.value);
-                // console.log(`Data loaded for ${reportDateInput.value}`);
             } catch (error) {
                 console.error('Error parsing data from localStorage:', error);
                 alert('Error loading data. Saved data might be corrupted.');
@@ -168,9 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 setActiveBreadcrumb(null);
             }
         } else {
-            // console.log(`No saved data found for ${reportDateInput.value}. Clearing form.`);
-            clearFormFields(); // Clear form if no data exists for the selected date
-            setActiveBreadcrumb(reportDateInput.value); // Keep datepicker visually selected
+            // No data for this date, clear form but keep date selected
+            clearFormFields();
+            setActiveBreadcrumb(reportDateInput.value);
+             // Trigger calculation after clearing to ensure consistency
+             calculateOverallTotalMarks();
         }
     };
 
@@ -178,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Breadcrumbs ---
 
     const populateBreadcrumbs = () => {
-        breadcrumbsContainer.innerHTML = ''; // Clear existing breadcrumbs
+        breadcrumbsContainer.innerHTML = ''; // Clear existing
         const dates = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -186,18 +312,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 dates.push(key.substring(storagePrefix.length));
             }
         }
-
-        // Sort dates chronologically (most recent first)
-        dates.sort((a, b) => new Date(b) - new Date(a));
+        dates.sort((a, b) => new Date(b) - new Date(a)); // Sort recent first
 
         dates.forEach(date => {
             const button = document.createElement('button');
             button.textContent = date;
             button.dataset.date = date;
             button.addEventListener('click', () => {
-                reportDateInput.value = date; // Set date picker
+                reportDateInput.value = date;
                 loadData(); // Load data for this date
-                // Active state will be set by loadData calling setActiveBreadcrumb
             });
             breadcrumbsContainer.appendChild(button);
         });
@@ -205,104 +328,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setActiveBreadcrumb = (activeDate) => {
          breadcrumbsContainer.querySelectorAll('button').forEach(button => {
-             if(button.dataset.date === activeDate) {
-                 button.classList.add('active');
-             } else {
-                 button.classList.remove('active');
-             }
+             button.classList.toggle('active', button.dataset.date === activeDate);
          });
     };
 
 
-    // --- Auto Calculations ---
+    // --- Download Functions ---
 
-    const calculateTotalQuestions = (subjectSection) => {
-        const attempted = getNumericValue(subjectSection.querySelector('.qs-attempted'));
-        const notAttempted = getNumericValue(subjectSection.querySelector('.qs-not-attempted'));
-        const totalInput = subjectSection.querySelector('.qs-total');
-        totalInput.value = attempted + notAttempted;
-    };
-
-    const calculateAttempted = (subjectSection) => {
-        const correct = getNumericValue(subjectSection.querySelector('.qs-correct'));
-        const incorrect = getNumericValue(subjectSection.querySelector('.qs-incorrect'));
-        const attemptedInput = subjectSection.querySelector('.qs-attempted');
-         // Avoid infinite loops: only update if the sum is different
-         if (getNumericValue(attemptedInput) !== (correct + incorrect)) {
-            attemptedInput.value = correct + incorrect;
-             // If attempted is updated, total questions might also need updating
-             calculateTotalQuestions(subjectSection);
-         }
-
-    };
-
-    // Attach calculation listeners to relevant inputs
-    subjectSections.forEach(section => {
-        const attemptedInput = section.querySelector('.qs-attempted');
-        const notAttemptedInput = section.querySelector('.qs-not-attempted');
-        const correctInput = section.querySelector('.qs-correct');
-        const incorrectInput = section.querySelector('.qs-incorrect');
-
-        // Update Total when Attempted or Not Attempted changes
-        attemptedInput.addEventListener('input', () => calculateTotalQuestions(section));
-        notAttemptedInput.addEventListener('input', () => calculateTotalQuestions(section));
-
-        // Update Attempted when Correct or Incorrect changes
-        correctInput.addEventListener('input', () => calculateAttempted(section));
-        incorrectInput.addEventListener('input', () => calculateAttempted(section));
-
-        // --- Bidirectional Calculation (Handle with Care) ---
-        // If you want typing in Attempted to influence Incorrect (assuming Correct is filled):
-        /*
-        attemptedInput.addEventListener('input', () => {
-            const attempted = getNumericValue(attemptedInput);
-            const correct = getNumericValue(correctInput);
-            if (attempted >= correct) {
-                 // Only update if it makes sense
-                 incorrectInput.value = attempted - correct;
-                 calculateTotalQuestions(section); // Keep total updated
-            }
-            // Optional: Add logic if Correct is empty and Incorrect is filled?
-        });
-        */
-        // This adds complexity and potential user confusion, stick to C+I => A for now.
-    });
-
-
-    // --- Image Download ---
-
-    const downloadReportCard = () => {
+    const downloadReportCardImage = () => {
         const date = reportDateInput.value || 'report';
         const filename = `PTS_Report_Card_${date}.png`;
 
-        // Optional: Add a class to body to temporarily change styles
+        // Optional: Add class to body for styling during capture
         // document.body.classList.add('capturing');
 
         html2canvas(reportCardContainer, {
-            scale: 2, // Increase scale for better resolution
-            useCORS: true, // If using external images/fonts (though unlikely here)
-            logging: true, // Enable logging for debugging
-            onrendered: function() { // Callback for older versions, not needed for promise
-                 // Reset styles if changed
-                 // document.body.classList.remove('capturing');
-            }
+            scale: 2, // Higher resolution
+            useCORS: true,
+            logging: false, // Set to true for debugging
+            // Ensure background is captured if container doesn't have explicit one
+            backgroundColor: window.getComputedStyle(document.body).backgroundColor
          }).then(canvas => {
-            // Reset styles if changed
-             // document.body.classList.remove('capturing');
-
+            // document.body.classList.remove('capturing'); // Remove class if added
             const image = canvas.toDataURL('image/png');
-
-            // Create a temporary link to trigger download
             const link = document.createElement('a');
             link.download = filename;
             link.href = image;
             link.click();
-            link.remove(); // Clean up the temporary link
+            link.remove();
         }).catch(err => {
-             // Reset styles if changed
-             // document.body.classList.remove('capturing');
+             // document.body.classList.remove('capturing'); // Remove class if added
              console.error("Error generating image:", err);
              alert("Sorry, couldn't generate the image.");
+        });
+    };
+
+    const downloadReportCardPDF = () => {
+         if (typeof jsPDF === 'undefined') {
+            alert("PDF generation library (jsPDF) not loaded.");
+            return;
+         }
+        const date = reportDateInput.value || 'report';
+        const filename = `PTS_Report_Card_${date}.pdf`;
+        const pdf = new jsPDF({
+            orientation: 'l', // landscape
+            unit: 'pt', // points
+            format: 'a4', // or specific dimensions
+            putOnlyUsedFonts:true,
+            floatPrecision: 16 // or "smart"
+        });
+
+         // Optional: Add class to body for styling during capture
+        // document.body.classList.add('capturing');
+
+        // Use the html method of jsPDF - requires html2canvas internally for complex rendering
+        pdf.html(reportCardContainer, {
+            callback: function (pdf) {
+                // document.body.classList.remove('capturing'); // Remove class if added
+                pdf.save(filename);
+                 console.log('PDF generated and download triggered.');
+            },
+            html2canvas: {
+                scale: 2, // Adjust scale for better PDF quality if needed
+                useCORS: true,
+                 backgroundColor: window.getComputedStyle(document.body).backgroundColor
+                // You might need to adjust margins or width here
+            },
+            x: 15, // Left margin
+            y: 15, // Top margin
+            width: pdf.internal.pageSize.getWidth() - 30, // Adjust width to fit with margins
+             windowWidth: reportCardContainer.scrollWidth // Important for capturing full width if scrolling
+        }).catch(err => {
+             // document.body.classList.remove('capturing'); // Remove class if added
+             console.error("Error generating PDF:", err);
+             alert("Sorry, couldn't generate the PDF.");
         });
     };
 
@@ -310,18 +409,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     saveButton.addEventListener('click', saveData);
     clearButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the current form? This will not delete saved data.')) {
+        if (confirm('Are you sure you want to clear the current form data? This will not delete saved reports.')) {
             clearFormFields();
+             calculateOverallTotalMarks(); // Ensure totals are zeroed out visually
         }
     });
-    downloadButton.addEventListener('click', downloadReportCard);
-    reportDateInput.addEventListener('change', loadData); // Load data when date changes
+    downloadButton.addEventListener('click', downloadReportCardImage);
+    downloadPdfButton.addEventListener('click', downloadReportCardPDF);
+    reportDateInput.addEventListener('change', loadData);
+
+    // Attach calculation listeners
+    subjectSections.forEach(section => {
+        const inputsToWatch = section.querySelectorAll('.qs-total, .qs-attempted, .qs-correct');
+        inputsToWatch.forEach(input => {
+            input.addEventListener('input', () => {
+                // Recalculate this specific subject AND the overall total
+                calculateSubjectMetrics(section); // Calculate subject first
+                calculateOverallTotalMarks(); // Then update overall total
+            });
+        });
+    });
+
+    // Listen for changes in global marking scheme settings
+    marksPerQuestionGroup.addEventListener('change', calculateOverallTotalMarks);
+    negativeMarkingGroup.addEventListener('change', calculateOverallTotalMarks);
 
 
     // --- Initial Load ---
-    const today = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD
-    reportDateInput.value = today; // Set default date to today
-    populateBreadcrumbs(); // Show saved dates
-    loadData(); // Load data for the default date (today) or clear if none
+    const today = new Date().toISOString().split('T')[0];
+    reportDateInput.value = today;
+    populateBreadcrumbs();
+    loadData(); // Load data for today (or clear if none)
 
 });
