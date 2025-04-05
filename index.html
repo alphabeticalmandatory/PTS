@@ -5,18 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTS Report Card</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Include html2canvas library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="reportCardContainer"> <!-- Added ID for image capture -->
         <header>
-            <!-- Optional: Add logo here if you have one -->
-            <!-- <img src="logo.png" alt="Parmar Logo" class="logo"> -->
             <h1>PTS REPORT CARD</h1>
             <span class="icon">📄</span>
         </header>
 
+        <section class="card controls">
+             <div class="form-row">
+                <div class="form-group">
+                    <label for="reportDate">Select Report Date:</label>
+                    <input type="date" id="reportDate">
+                </div>
+                 <div class="form-group breadcrumb-container">
+                     <label>Saved Reports:</label>
+                     <nav id="breadcrumbs"></nav>
+                 </div>
+            </div>
+        </section>
+
+
         <section class="card student-info">
-            <div class="form-row">
+             <!-- Same fields as before: Name, Mock No., Rank, Total Marks, Percentile -->
+             <div class="form-row">
                 <div class="form-group">
                     <label for="studentName">Name:</label>
                     <input type="text" id="studentName">
@@ -42,179 +57,189 @@
             </div>
         </section>
 
-        <!-- Maths Section -->
-        <section class="card subject-section">
-            <h2>MATHS</h2>
-            <div class="performance-summary">
-                <input type="number" id="mathsQuestions" placeholder="No. Qs">
-                <input type="number" id="mathsAttempted" placeholder="Attempted">
-                <input type="number" id="mathsNotAttempted" placeholder="Not Attempted">
-                <input type="number" id="mathsCorrect" placeholder="Correct">
-                <input type="number" id="mathsIncorrect" placeholder="Incorrect">
-                <input type="text" id="mathsTime" placeholder="Time (e.g., 30m)">
-                <input type="number" id="mathsMarks" placeholder="Marks">
-            </div>
-            <div class="topics">
-                <div class="topic-list">
-                    <ul>
-                        <li>PERCENTAGE</li>
-                        <li>PROFIT LOSS & DISCOUNT</li>
-                        <li>RATIO & PROPORTION</li>
-                        <li>MIXTURE & ALLIGATION</li>
-                        <li>AVERAGE</li>
-                        <li>TIME & WORK</li>
-                        <li>TIME, SPEED, DISTANCE</li>
-                        <li>GEOMETRY</li>
-                        <li>SIMPLIFICATION</li>
-                        <li>NUMBER SYSTEM</li>
-                    </ul>
+        <!-- Wrapper for horizontal subjects -->
+        <div class="subjects-wrapper">
+            <!-- Maths Section -->
+            <section class="card subject-section" data-subject="maths">
+                <h2>MATHS</h2>
+                <div class="performance-summary">
+                    <input type="number" class="qs-total" id="mathsQuestions" placeholder="No. Qs" readonly> <!-- Readonly -->
+                    <input type="number" class="qs-attempted" id="mathsAttempted" placeholder="Attempted">
+                    <input type="number" class="qs-not-attempted" id="mathsNotAttempted" placeholder="Not Attempted">
+                    <input type="number" class="qs-correct" id="mathsCorrect" placeholder="Correct">
+                    <input type="number" class="qs-incorrect" id="mathsIncorrect" placeholder="Incorrect">
+                    <input type="text" id="mathsTime" placeholder="Time">
+                    <input type="number" id="mathsMarks" placeholder="Marks">
                 </div>
-                 <div class="topic-list">
-                     <ul>
-                        <li>ALGEBRA</li>
-                        <li>TRIGONOMETRY</li>
-                        <li>MENSURATION</li>
-                        <li>LOGS & HCF</li>
-                        <li>DATA INTERPRETATION</li>
-                        <li>C.I./S.I.</li>
-                    </ul>
+                <div class="topics">
+                    <!-- Topic lists remain the same -->
+                     <div class="topic-list">
+                        <ul>
+                            <li>PERCENTAGE</li>
+                            <li>PROFIT LOSS & DISCOUNT</li>
+                            <li>RATIO & PROPORTION</li>
+                            <li>MIXTURE & ALLIGATION</li>
+                            <li>AVERAGE</li>
+                            <li>TIME & WORK</li>
+                            <li>TIME, SPEED, DISTANCE</li>
+                            <li>GEOMETRY</li>
+                            <li>SIMPLIFICATION</li>
+                            <li>NUMBER SYSTEM</li>
+                        </ul>
+                    </div>
+                     <div class="topic-list">
+                         <ul>
+                            <li>ALGEBRA</li>
+                            <li>TRIGONOMETRY</li>
+                            <li>MENSURATION</li>
+                            <li>LOGS & HCF</li>
+                            <li>DATA INTERPRETATION</li>
+                            <li>C.I./S.I.</li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="learnings">
-                <label for="mathsLearnings">Learnings / What went wrong:</label>
-                <textarea id="mathsLearnings" rows="4"></textarea>
-            </div>
-        </section>
+                <div class="learnings">
+                    <label for="mathsLearnings">Learnings / What went wrong:</label>
+                    <textarea id="mathsLearnings" rows="4"></textarea>
+                </div>
+            </section>
 
-        <!-- English Section -->
-        <section class="card subject-section">
-            <h2>ENGLISH</h2>
-            <div class="performance-summary">
-                <input type="number" id="engQuestions" placeholder="No. Qs">
-                <input type="number" id="engAttempted" placeholder="Attempted">
-                <input type="number" id="engNotAttempted" placeholder="Not Attempted">
-                <input type="number" id="engCorrect" placeholder="Correct">
-                <input type="number" id="engIncorrect" placeholder="Incorrect">
-                <input type="text" id="engTime" placeholder="Time (e.g., 20m)">
-                <input type="number" id="engMarks" placeholder="Marks">
-            </div>
-            <div class="topics">
-                <div class="topic-list">
-                    <ul>
-                        <li>ERROR</li>
-                        <li>SENTENCE IMPROVEMENT</li>
-                        <li>FILL IN THE BLANKS</li>
-                        <li>VOICE</li>
-                        <li>NARRATION</li>
-                        <li>ANTONYMS</li>
-                        <li>SYNONYMS</li>
-                    </ul>
+            <!-- English Section -->
+            <section class="card subject-section" data-subject="eng">
+                <h2>ENGLISH</h2>
+                 <div class="performance-summary">
+                    <input type="number" class="qs-total" id="engQuestions" placeholder="No. Qs" readonly>
+                    <input type="number" class="qs-attempted" id="engAttempted" placeholder="Attempted">
+                    <input type="number" class="qs-not-attempted" id="engNotAttempted" placeholder="Not Attempted">
+                    <input type="number" class="qs-correct" id="engCorrect" placeholder="Correct">
+                    <input type="number" class="qs-incorrect" id="engIncorrect" placeholder="Incorrect">
+                    <input type="text" id="engTime" placeholder="Time">
+                    <input type="number" id="engMarks" placeholder="Marks">
                 </div>
-                 <div class="topic-list">
-                     <ul>
-                        <li>IDIOMS & PHRASES</li>
-                        <li>CLOZE TEST</li>
-                        <li>READING COMPREHENSION</li>
-                     </ul>
+                 <div class="topics">
+                    <!-- Topic lists remain the same -->
+                    <div class="topic-list">
+                        <ul>
+                            <li>ERROR</li>
+                            <li>SENTENCE IMPROVEMENT</li>
+                            <li>FILL IN THE BLANKS</li>
+                            <li>VOICE</li>
+                            <li>NARRATION</li>
+                            <li>ANTONYMS</li>
+                            <li>SYNONYMS</li>
+                        </ul>
+                    </div>
+                     <div class="topic-list">
+                         <ul>
+                            <li>IDIOMS & PHRASES</li>
+                            <li>CLOZE TEST</li>
+                            <li>READING COMPREHENSION</li>
+                         </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="learnings">
-                <label for="engLearnings">Learnings / Rules to Remember:</label>
-                <textarea id="engLearnings" rows="4"></textarea>
-            </div>
-        </section>
+                <div class="learnings">
+                    <label for="engLearnings">Learnings / Rules to Remember:</label>
+                    <textarea id="engLearnings" rows="4"></textarea>
+                </div>
+            </section>
 
-        <!-- GK/GS Section -->
-        <section class="card subject-section">
-            <h2>GK/GS</h2>
-            <div class="performance-summary">
-                <input type="number" id="gkgsQuestions" placeholder="No. Qs">
-                <input type="number" id="gkgsAttempted" placeholder="Attempted">
-                <input type="number" id="gkgsNotAttempted" placeholder="Not Attempted">
-                <input type="number" id="gkgsCorrect" placeholder="Correct">
-                <input type="number" id="gkgsIncorrect" placeholder="Incorrect">
-                <input type="text" id="gkgsTime" placeholder="Time (e.g., 10m)">
-                <input type="number" id="gkgsMarks" placeholder="Marks">
-            </div>
-            <div class="topics">
-                <div class="topic-list">
-                    <ul>
-                        <li>HISTORY</li>
-                        <li>GEOGRAPHY</li>
-                        <li>POLITY</li>
-                        <li>SCIENCE</li>
-                        <li>ECONOMICS</li>
-                        <li>STATIC GK</li>
-                    </ul>
+            <!-- GK/GS Section -->
+            <section class="card subject-section" data-subject="gkgs">
+                <h2>GK/GS</h2>
+                 <div class="performance-summary">
+                    <input type="number" class="qs-total" id="gkgsQuestions" placeholder="No. Qs" readonly>
+                    <input type="number" class="qs-attempted" id="gkgsAttempted" placeholder="Attempted">
+                    <input type="number" class="qs-not-attempted" id="gkgsNotAttempted" placeholder="Not Attempted">
+                    <input type="number" class="qs-correct" id="gkgsCorrect" placeholder="Correct">
+                    <input type="number" class="qs-incorrect" id="gkgsIncorrect" placeholder="Incorrect">
+                    <input type="text" id="gkgsTime" placeholder="Time">
+                    <input type="number" id="gkgsMarks" placeholder="Marks">
                 </div>
-                 <div class="topic-list">
-                     <ul>
-                        <li>CURRENT AFFAIRS</li>
-                     </ul>
+                <div class="topics">
+                   <!-- Topic lists remain the same -->
+                   <div class="topic-list">
+                        <ul>
+                            <li>HISTORY</li>
+                            <li>GEOGRAPHY</li>
+                            <li>POLITY</li>
+                            <li>SCIENCE</li>
+                            <li>ECONOMICS</li>
+                            <li>STATIC GK</li>
+                        </ul>
+                    </div>
+                     <div class="topic-list">
+                         <ul>
+                            <li>CURRENT AFFAIRS</li>
+                         </ul>
+                    </div>
                 </div>
-            </div>
-             <div class="learnings">
-                <label for="gkgsLearnings">Learnings / Worth it to Note:</label>
-                <textarea id="gkgsLearnings" rows="4"></textarea>
-            </div>
-        </section>
+                 <div class="learnings">
+                    <label for="gkgsLearnings">Learnings / Worth it to Note:</label>
+                    <textarea id="gkgsLearnings" rows="4"></textarea>
+                </div>
+            </section>
 
-        <!-- Reasoning Section -->
-        <section class="card subject-section">
-            <h2>REASONING</h2>
-            <div class="performance-summary">
-                <input type="number" id="reasQuestions" placeholder="No. Qs">
-                <input type="number" id="reasAttempted" placeholder="Attempted">
-                <input type="number" id="reasNotAttempted" placeholder="Not Attempted">
-                <input type="number" id="reasCorrect" placeholder="Correct">
-                <input type="number" id="reasIncorrect" placeholder="Incorrect">
-                <input type="text" id="reasTime" placeholder="Time (e.g., 25m)">
-                <input type="number" id="reasMarks" placeholder="Marks">
-            </div>
-             <div class="topics">
-                <div class="topic-list">
-                    <ul>
-                        <li>NUMBER SERIES</li>
-                        <li>ALPHABET SERIES</li>
-                        <li>ANALOGY</li>
-                        <li>SYLLOGISM</li>
-                        <li>MIRROR / WATER IMAGE</li>
-                        <li>DICTIONARY</li>
-                        <li>CLASSIFICATIONS</li>
-                        <li>DICE</li>
-                        <li>FIGURE RELATED</li>
-                        <li>ODD ONE OUT</li>
-                        <li>CLOCK</li>
-                    </ul>
+            <!-- Reasoning Section -->
+            <section class="card subject-section" data-subject="reas">
+                <h2>REASONING</h2>
+                 <div class="performance-summary">
+                    <input type="number" class="qs-total" id="reasQuestions" placeholder="No. Qs" readonly>
+                    <input type="number" class="qs-attempted" id="reasAttempted" placeholder="Attempted">
+                    <input type="number" class="qs-not-attempted" id="reasNotAttempted" placeholder="Not Attempted">
+                    <input type="number" class="qs-correct" id="reasCorrect" placeholder="Correct">
+                    <input type="number" class="qs-incorrect" id="reasIncorrect" placeholder="Incorrect">
+                    <input type="text" id="reasTime" placeholder="Time">
+                    <input type="number" id="reasMarks" placeholder="Marks">
                 </div>
-                 <div class="topic-list">
-                     <ul>
-                        <li>BODMASS</li>
-                        <li>BLOOD RELATION</li>
-                        <li>NUMBER CODING</li>
-                        <li>CALENDAR</li>
-                        <li>MATRIX</li>
-                        <li>MATHEMATICAL OPERATIONS</li>
-                        <li>WORD CODING</li>
-                        <li>RANKING/SITTING ARRANGEMENT</li>
-                        <li>VENN DIAGRAM</li>
-                     </ul>
+                <div class="topics">
+                    <!-- Topic lists remain the same -->
+                     <div class="topic-list">
+                        <ul>
+                            <li>NUMBER SERIES</li>
+                            <li>ALPHABET SERIES</li>
+                            <li>ANALOGY</li>
+                            <li>SYLLOGISM</li>
+                            <li>MIRROR / WATER IMAGE</li>
+                            <li>DICTIONARY</li>
+                            <li>CLASSIFICATIONS</li>
+                            <li>DICE</li>
+                            <li>FIGURE RELATED</li>
+                            <li>ODD ONE OUT</li>
+                            <li>CLOCK</li>
+                        </ul>
+                    </div>
+                     <div class="topic-list">
+                         <ul>
+                            <li>BODMASS</li>
+                            <li>BLOOD RELATION</li>
+                            <li>NUMBER CODING</li>
+                            <li>CALENDAR</li>
+                            <li>MATRIX</li>
+                            <li>MATHEMATICAL OPERATIONS</li>
+                            <li>WORD CODING</li>
+                            <li>RANKING/SITTING ARRANGEMENT</li>
+                            <li>VENN DIAGRAM</li>
+                         </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="learnings">
-                <label for="reasLearnings">Learnings / Tricks to Remember:</label>
-                <textarea id="reasLearnings" rows="4"></textarea>
-            </div>
-        </section>
+                <div class="learnings">
+                    <label for="reasLearnings">Learnings / Tricks to Remember:</label>
+                    <textarea id="reasLearnings" rows="4"></textarea>
+                </div>
+            </section>
+        </div> <!-- /subjects-wrapper -->
 
-        <section class="actions">
-            <button id="saveButton">Save Data</button>
-            <button id="loadButton">Load Data</button>
-            <button id="clearButton">Clear All</button>
-        </section>
-
+        <!-- Action buttons outside the main capture area if preferred -->
     </div> <!-- /container -->
+
+    <section class="actions card">
+            <button id="saveButton">Save Current Date Data</button>
+            <!-- Load is now triggered by date picker/breadcrumbs -->
+            <button id="clearButton">Clear Current Form</button>
+            <button id="downloadButton">Download as Image</button>
+            <!-- Optional: <button id="clearHistoryButton">Clear All Saved Data</button> -->
+    </section>
 
     <script src="script.js"></script>
 </body>
-  </html>
+</html>
