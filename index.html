@@ -28,7 +28,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin-bottom: 1rem;
     }
-    /* Top common fields */
+    /* Top common section */
     .top-section {
       display: flex;
       flex-wrap: wrap;
@@ -79,9 +79,6 @@
     .field-group {
       margin-bottom: 1rem;
     }
-    .field-group input[type="number"] {
-      width: 100%;
-    }
     textarea {
       resize: vertical;
       min-height: 60px;
@@ -130,15 +127,17 @@
 <body>
   <h1>PTS Report Card</h1>
   <div class="container">
-    <!-- Top common section -->
+    <!-- Top common section: Report Date, Load Previous Data, Marking scheme -->
     <div class="top-section">
       <div>
         <label for="reportDate">Report Date</label>
         <input type="date" id="reportDate" />
       </div>
       <div>
-        <label for="global_totalQ">Total Questions (Overall)</label>
-        <input type="number" id="global_totalQ" min="0" value="0" />
+        <label for="loadSelect">Load Saved Report</label>
+        <select id="loadSelect">
+          <option value="">--Select--</option>
+        </select>
       </div>
       <div style="flex-basis:100%;">
         <label>Marks Per Question</label>
@@ -156,11 +155,15 @@
           <label><input type="radio" name="negative" value="0" checked />None</label>
         </div>
       </div>
+      <div style="flex-basis:100%;">
+        <button id="loadDataBtn">Load Report</button>
+      </div>
     </div>
+    
     <!-- Multi-Step Subject Section -->
     <div id="subjectContainer">
-      <!-- Subject card template (only one active at a time) -->
-      <div class="subject-card" data-index="0">
+      <!-- Only one subject is shown at a time -->
+      <div class="subject-card active" data-index="0">
         <h2 id="subjectTitle">Maths</h2>
         <div class="field-group">
           <label for="attempted">Attempted</label>
@@ -180,12 +183,14 @@
         </div>
       </div>
     </div>
+    
     <!-- Navigation buttons -->
     <div class="nav-buttons">
       <button id="prevBtn" disabled>Previous</button>
       <button id="nextBtn">Next</button>
     </div>
-    <!-- Final step buttons and analytics (only visible on last step) -->
+    
+    <!-- Final step: Save Data, Download PDF, and Analytics -->
     <div id="finalSection" style="display:none; margin-top:1rem;">
       <button id="saveDataBtn">Save Data</button>
       <button id="downloadPDFBtn" style="margin-left: 0.5rem;">Download as PDF</button>
@@ -194,20 +199,21 @@
       </div>
     </div>
   </div>
-
+  
   <!-- Include html2canvas and jsPDF for PDF download -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // Define subjects array (one subject per step)
+    // Subjects (one per step)
     const subjects = ["Maths", "English", "GK/GS", "Reasoning"];
     let currentStep = 0;
-    // Global object to hold subject data
+    
+    // Object to store each subject's data
     const subjectData = {};
     subjects.forEach(subj => {
       subjectData[subj] = { attempted: 0, correct: 0, notes: "" };
     });
-
+    
     // Cache elements
     const subjectCard = document.querySelector(".subject-card");
     const subjectTitle = document.getElementById("subjectTitle");
@@ -219,16 +225,19 @@
     const nextBtn = document.getElementById("nextBtn");
     const finalSection = document.getElementById("finalSection");
     const analyticsDiv = document.getElementById("analytics");
-
-    // Update the auto-calculated "incorrect" field
+    const loadSelect = document.getElementById("loadSelect");
+    const loadDataBtn = document.getElementById("loadDataBtn");
+    const reportDateInput = document.getElementById("reportDate");
+    
+    // Update auto-calculated "Incorrect"
     function updateAutoFields() {
       const attempted = parseInt(attemptedInput.value) || 0;
       const correct = parseInt(correctInput.value) || 0;
       const incorrect = attempted - correct;
       incorrectInput.value = incorrect >= 0 ? incorrect : 0;
     }
-
-    // Save current subject data into subjectData object
+    
+    // Save current subject data
     function saveCurrentSubject() {
       const subjName = subjects[currentStep];
       subjectData[subjName] = {
@@ -237,8 +246,8 @@
         notes: notesInput.value || ""
       };
     }
-
-    // Load data for current subject into the form
+    
+    // Load current subject data into the form
     function loadCurrentSubject() {
       const subjName = subjects[currentStep];
       subjectTitle.textContent = subjName;
@@ -248,7 +257,7 @@
       notesInput.value = data.notes;
       updateAutoFields();
     }
-
+    
     // Update navigation buttons and final section visibility
     function updateNavigation() {
       prevBtn.disabled = currentStep === 0;
@@ -261,8 +270,8 @@
         finalSection.style.display = "none";
       }
     }
-
-    // Calculate and display analytics per subject
+    
+    // Calculate and display analytics for each subject
     function showAnalytics() {
       const marksPerQ = parseFloat(document.querySelector('input[name="marksPerQ"]:checked').value);
       const negativeMark = parseFloat(document.querySelector('input[name="negative"]:checked').value);
@@ -276,12 +285,50 @@
         analyticsDiv.appendChild(p);
       });
     }
-
-    // Event listeners to update auto-fields on input change
-    attemptedInput.addEventListener("input", updateAutoFields);
-    correctInput.addEventListener("input", updateAutoFields);
-
-    // Navigation events
+    
+    // Populate the load dropdown from localStorage
+    function loadSavedReports() {
+      loadSelect.innerHTML = '<option value="">--Select--</option>';
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("PTS_REPORT_")) {
+          const option = document.createElement("option");
+          option.value = key;
+          option.textContent = key.replace("PTS_REPORT_", "");
+          loadSelect.appendChild(option);
+        }
+      }
+    }
+    
+    // Load saved data when "Load Report" is clicked
+    loadDataBtn.addEventListener("click", () => {
+      const key = loadSelect.value;
+      if (!key) {
+        alert("Please select a report to load.");
+        return;
+      }
+      const savedData = JSON.parse(localStorage.getItem(key));
+      if (savedData) {
+        reportDateInput.value = savedData.date || "";
+        // Set marking scheme
+        document.querySelector(`input[name="marksPerQ"][value="${savedData.marksPerQ}"]`).checked = true;
+        document.querySelector(`input[name="negative"][value="${savedData.negativeMark}"]`).checked = true;
+        // Load subject data
+        Object.keys(savedData.subjects).forEach(subj => {
+          if (subjectData[subj] !== undefined) {
+            subjectData[subj] = savedData.subjects[subj];
+          }
+        });
+        currentStep = 0;
+        loadCurrentSubject();
+        updateNavigation();
+        alert("Report loaded.");
+      } else {
+        alert("No data found for the selected report.");
+      }
+    });
+    
+    // Navigation event listeners
     nextBtn.addEventListener("click", () => {
       saveCurrentSubject();
       if (currentStep < subjects.length - 1) {
@@ -298,29 +345,29 @@
         updateNavigation();
       }
     });
-
-    // Save data to localStorage using date as key (includes common and subject data)
+    
+    // Save report to localStorage
     document.getElementById("saveDataBtn").addEventListener("click", () => {
-      saveCurrentSubject(); // ensure current step is saved
-      const reportDate = document.getElementById("reportDate").value;
+      saveCurrentSubject(); // ensure current subject is saved
+      const reportDate = reportDateInput.value;
       if (!reportDate) {
         alert("Please select a report date.");
         return;
       }
       const dataToSave = {
         date: reportDate,
-        totalQuestions: parseInt(document.getElementById("global_totalQ").value) || 0,
         marksPerQ: document.querySelector('input[name="marksPerQ"]:checked').value,
         negativeMark: document.querySelector('input[name="negative"]:checked').value,
         subjects: subjectData
       };
       localStorage.setItem(`PTS_REPORT_${reportDate}`, JSON.stringify(dataToSave));
-      alert("Data saved for " + reportDate);
+      alert("Report saved for " + reportDate);
+      loadSavedReports();
     });
-
-    // Download as PDF functionality using html2canvas and jsPDF
+    
+    // Download the report as PDF using html2canvas and jsPDF
     document.getElementById("downloadPDFBtn").addEventListener("click", () => {
-      // We capture the container (including common data and analytics)
+      // Capture the container (including common top section and analytics)
       const container = document.querySelector(".container");
       html2canvas(container).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
@@ -335,8 +382,13 @@
         pdf.save("PTS_Report.pdf");
       });
     });
-
-    // On initial load
+    
+    // Update auto-calculated field on input changes
+    attemptedInput.addEventListener("input", updateAutoFields);
+    correctInput.addEventListener("input", updateAutoFields);
+    
+    // Initial load: load saved reports into dropdown
+    loadSavedReports();
     loadCurrentSubject();
     updateNavigation();
   </script>
