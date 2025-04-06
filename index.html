@@ -1,62 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>PTS Report Card</title>
-  <!-- Minimal Material-like styling -->
   <style>
     body {
-      margin: 0;
-      padding: 1rem;
+      margin: 0; 
+      padding: 0; 
       font-family: "Roboto", sans-serif;
-      background: #f9f9f9;
+      background: #fafafa;
       color: #333;
     }
 
-    h1 {
-      margin: 0 0 1rem;
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
     }
 
-    .top-bar {
+    h1 {
+      margin-top: 0;
+    }
+
+    /* Simple step container styling */
+    .step {
+      display: none; /* hidden by default; shown dynamically */
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .step.active {
+      display: block;
+    }
+
+    .form-row {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      align-items: center;
       margin-bottom: 1rem;
     }
-
-    .top-bar label {
+    .form-group {
+      flex: 1 1 200px;
+      min-width: 150px;
+    }
+    label {
       font-weight: 500;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    input[type="date"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
 
-    .breadcrumb {
+    /* Toggle group for marks/negative marking */
+    .toggle-group {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toggle-group label {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.2rem;
+      cursor: pointer;
+      font-weight: normal;
     }
-
-    .subject-container {
-      display: flex;
-      overflow-x: auto; /* horizontal scroll */
-      gap: 1rem;
-      padding: 1rem 0;
-    }
-
-    .subject-card {
-      background: #fff;
-      border-radius: 8px;
-      min-width: 320px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 1rem;
-      flex-shrink: 0;
-    }
-
-    .subject-card h2 {
-      margin-top: 0;
-      font-size: 1.2rem;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
+    .toggle-group input[type="radio"] {
+      margin: 0;
+      cursor: pointer;
     }
 
     table {
@@ -64,21 +84,17 @@
       border-collapse: collapse;
       margin-bottom: 1rem;
     }
-
     table th, table td {
       text-align: left;
       padding: 0.5rem;
       border-bottom: 1px solid #eee;
-      font-size: 0.9rem;
     }
 
-    .bottom-bar {
-      margin-top: 1rem;
+    .btn-row {
       display: flex;
       gap: 1rem;
-      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
-
     button {
       cursor: pointer;
       background-color: #6200ee;
@@ -88,359 +104,429 @@
       border-radius: 4px;
       font-size: 0.9rem;
     }
-
-    select, input[type="number"], input[type="date"] {
-      padding: 0.3rem;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
+    button:hover {
+      opacity: 0.9;
     }
 
-    .inline {
-      display: inline-block;
-      margin-right: 0.5rem;
+    /* Simple analytics table styling */
+    .analytics-table th {
+      background: #f2f2f2;
     }
 
-    /* Small styling for the “Material toggle” feel */
-    .toggle-group {
+    /* Minimal styling for load saved data dropdown at top */
+    .top-bar {
       display: flex;
-      gap: 0.5rem;
-    }
-
-    .toggle-group label {
-      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
       align-items: center;
-      gap: 0.2rem;
-      cursor: pointer;
-    }
-
-    .toggle-group input[type="radio"] {
-      margin: 0;
-      cursor: pointer;
+      margin-bottom: 1rem;
+      background: #fff;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #ddd;
     }
   </style>
 </head>
 <body>
+<div class="container">
   <h1>PTS Report Card</h1>
-  <!-- Top bar: date, breadcrumbs, marks per question, negative marking -->
+  <!-- Top bar with load data -->
   <div class="top-bar">
-    <!-- Date (for saving) -->
-    <div>
-      <label for="reportDate">Report Date:</label>
-      <input type="date" id="reportDate" />
-    </div>
-
-    <!-- Breadcrumb / previously saved data -->
-    <div class="breadcrumb">
-      <label for="savedDates">Saved Reports:</label>
+    <div class="form-group">
+      <label for="savedDates">Load Saved Report:</label>
       <select id="savedDates">
-        <option value="">--Select--</option>
+        <option value="">-- Select --</option>
       </select>
-      <button id="loadDataBtn">Load</button>
     </div>
+    <button id="loadDataBtn">Load Data</button>
+  </div>
 
-    <!-- Marks per question -->
-    <div class="toggle-group">
-      <span>Marks/Question:</span>
-      <label><input type="radio" name="marksPerQ" value="2" checked />2</label>
-      <label><input type="radio" name="marksPerQ" value="3" />3</label>
+  <!-- STEP 1: Basic Info -->
+  <div id="step1" class="step active">
+    <h2>Step 1: Basic Info</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="reportDate">Report Date:</label>
+        <input type="date" id="reportDate">
+      </div>
+      <div class="form-group">
+        <label for="totalQuestions">Total Questions:</label>
+        <input type="number" id="totalQuestions" min="0" value="100">
+      </div>
     </div>
-
-    <!-- Negative marking -->
-    <div class="toggle-group">
-      <span>Negative Marking:</span>
-      <label><input type="radio" name="negative" value="0.5" />1/2</label>
-      <label><input type="radio" name="negative" value="0.3333" />1/3</label>
-      <label><input type="radio" name="negative" value="0.25" />1/4</label>
-      <label><input type="radio" name="negative" value="0" checked />None</label>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Marks/Question:</label>
+        <div class="toggle-group" id="marksPerQGroup">
+          <label><input type="radio" name="marksPerQ" value="2" checked> 2</label>
+          <label><input type="radio" name="marksPerQ" value="3"> 3</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Negative Marking:</label>
+        <div class="toggle-group" id="negativeGroup">
+          <label><input type="radio" name="negative" value="0.5"> 1/2</label>
+          <label><input type="radio" name="negative" value="0.3333"> 1/3</label>
+          <label><input type="radio" name="negative" value="0.25"> 1/4</label>
+          <label><input type="radio" name="negative" value="0" checked> None</label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button id="toStep2Btn">Next</button>
     </div>
   </div>
 
-  <!-- Horizontal scroll container for subjects -->
-  <div class="subject-container" id="reportCard">
-    <!-- MATHS -->
-    <div class="subject-card">
-      <h2>Maths</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Questions</td>
-            <td><input type="number" id="maths_totalQ" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Attempted</td>
-            <td><input type="number" id="maths_attempted" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Not Attempted</td>
-            <td><input type="number" id="maths_inattempted" value="0" min="0" readonly /></td>
-          </tr>
-          <tr>
-            <td>Correct</td>
-            <td><input type="number" id="maths_correct" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Incorrect</td>
-            <td><input type="number" id="maths_incorrect" value="0" min="0" readonly /></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- ENGLISH -->
-    <div class="subject-card">
-      <h2>English</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Questions</td>
-            <td><input type="number" id="english_totalQ" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Attempted</td>
-            <td><input type="number" id="english_attempted" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Not Attempted</td>
-            <td><input type="number" id="english_inattempted" value="0" min="0" readonly /></td>
-          </tr>
-          <tr>
-            <td>Correct</td>
-            <td><input type="number" id="english_correct" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Incorrect</td>
-            <td><input type="number" id="english_incorrect" value="0" min="0" readonly /></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- GK/GS -->
-    <div class="subject-card">
-      <h2>GK/GS</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Questions</td>
-            <td><input type="number" id="gk_totalQ" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Attempted</td>
-            <td><input type="number" id="gk_attempted" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Not Attempted</td>
-            <td><input type="number" id="gk_inattempted" value="0" min="0" readonly /></td>
-          </tr>
-          <tr>
-            <td>Correct</td>
-            <td><input type="number" id="gk_correct" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Incorrect</td>
-            <td><input type="number" id="gk_incorrect" value="0" min="0" readonly /></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- REASONING -->
-    <div class="subject-card">
-      <h2>Reasoning</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Questions</td>
-            <td><input type="number" id="reasoning_totalQ" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Attempted</td>
-            <td><input type="number" id="reasoning_attempted" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Not Attempted</td>
-            <td><input type="number" id="reasoning_inattempted" value="0" min="0" readonly /></td>
-          </tr>
-          <tr>
-            <td>Correct</td>
-            <td><input type="number" id="reasoning_correct" value="0" min="0" /></td>
-          </tr>
-          <tr>
-            <td>Incorrect</td>
-            <td><input type="number" id="reasoning_incorrect" value="0" min="0" readonly /></td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- STEP 2: Subject Data -->
+  <div id="step2" class="step">
+    <h2>Step 2: Subject-wise Entries</h2>
+    <p>
+      For each subject, enter how many you <strong>attempted</strong> and how many were <strong>correct</strong>.  
+      “Not Attempted” and “Incorrect” will auto-fill based on your “Total Questions” from Step 1.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Attempted</th>
+          <th>Correct</th>
+          <th>Not Attempted</th>
+          <th>Incorrect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Maths</td>
+          <td><input type="number" id="maths_attempted" min="0" value="0"></td>
+          <td><input type="number" id="maths_correct" min="0" value="0"></td>
+          <td><input type="number" id="maths_inattempted" readonly></td>
+          <td><input type="number" id="maths_incorrect" readonly></td>
+        </tr>
+        <tr>
+          <td>English</td>
+          <td><input type="number" id="english_attempted" min="0" value="0"></td>
+          <td><input type="number" id="english_correct" min="0" value="0"></td>
+          <td><input type="number" id="english_inattempted" readonly></td>
+          <td><input type="number" id="english_incorrect" readonly></td>
+        </tr>
+        <tr>
+          <td>GK/GS</td>
+          <td><input type="number" id="gk_attempted" min="0" value="0"></td>
+          <td><input type="number" id="gk_correct" min="0" value="0"></td>
+          <td><input type="number" id="gk_inattempted" readonly></td>
+          <td><input type="number" id="gk_incorrect" readonly></td>
+        </tr>
+        <tr>
+          <td>Reasoning</td>
+          <td><input type="number" id="reasoning_attempted" min="0" value="0"></td>
+          <td><input type="number" id="reasoning_correct" min="0" value="0"></td>
+          <td><input type="number" id="reasoning_inattempted" readonly></td>
+          <td><input type="number" id="reasoning_incorrect" readonly></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="btn-row">
+      <button id="backToStep1Btn">Back</button>
+      <button id="toStep3Btn">Next</button>
     </div>
   </div>
 
-  <!-- Bottom bar: Save data, Save as image -->
-  <div class="bottom-bar">
-    <button id="saveDataBtn">Save Data</button>
-    <button id="saveImageBtn">Save as Image</button>
+  <!-- STEP 3: Analytics & Save -->
+  <div id="step3" class="step">
+    <h2>Step 3: Analytics & Save</h2>
+    <p>Review your subject-wise scores. Then you can save the data and/or export as an image.</p>
+    <table class="analytics-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Correct</th>
+          <th>Wrong</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="analyticsBody">
+        <!-- Dynamically filled by JS -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Total</th>
+          <th id="analyticsTotalCorrect">0</th>
+          <th id="analyticsTotalWrong">0</th>
+          <th id="analyticsTotalScore">0</th>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="btn-row">
+      <button id="backToStep2Btn">Back</button>
+      <button id="saveDataBtn">Save Data</button>
+      <button id="saveImageBtn">Save as Image</button>
+    </div>
   </div>
+</div>
 
-  <!-- html2canvas for screenshot -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script>
-    // A small helper to list all subject fields in a structured way
-    const subjects = ["maths", "english", "gk", "reasoning"];
+<!-- html2canvas for screenshot -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    // On page load, populate the savedDates dropdown from localStorage
-    window.addEventListener("load", () => {
-      loadSavedDates();
-      // Attach listeners to auto-calculate "Not Attempted" and "Incorrect"
-      subjects.forEach(subj => {
-        document.getElementById(`${subj}_totalQ`).addEventListener("input", () => updateAutoFields(subj));
-        document.getElementById(`${subj}_attempted`).addEventListener("input", () => updateAutoFields(subj));
-        document.getElementById(`${subj}_correct`).addEventListener("input", () => updateAutoFields(subj));
-      });
+<script>
+  // We will store references to each step
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+  const step3 = document.getElementById('step3');
+
+  // Navigation buttons
+  const toStep2Btn = document.getElementById('toStep2Btn');
+  const toStep3Btn = document.getElementById('toStep3Btn');
+  const backToStep1Btn = document.getElementById('backToStep1Btn');
+  const backToStep2Btn = document.getElementById('backToStep2Btn');
+
+  // Step 1 elements
+  const reportDateInput = document.getElementById('reportDate');
+  const totalQuestionsInput = document.getElementById('totalQuestions');
+  // Step 2 subject inputs
+  const subjects = ['maths','english','gk','reasoning'];
+  const attemptedInputs = {
+    maths: document.getElementById('maths_attempted'),
+    english: document.getElementById('english_attempted'),
+    gk: document.getElementById('gk_attempted'),
+    reasoning: document.getElementById('reasoning_attempted'),
+  };
+  const correctInputs = {
+    maths: document.getElementById('maths_correct'),
+    english: document.getElementById('english_correct'),
+    gk: document.getElementById('gk_correct'),
+    reasoning: document.getElementById('reasoning_correct'),
+  };
+  const inattemptedOutputs = {
+    maths: document.getElementById('maths_inattempted'),
+    english: document.getElementById('english_inattempted'),
+    gk: document.getElementById('gk_inattempted'),
+    reasoning: document.getElementById('reasoning_inattempted'),
+  };
+  const incorrectOutputs = {
+    maths: document.getElementById('maths_incorrect'),
+    english: document.getElementById('english_incorrect'),
+    gk: document.getElementById('gk_incorrect'),
+    reasoning: document.getElementById('reasoning_incorrect'),
+  };
+
+  // Step 3 analytics
+  const analyticsBody = document.getElementById('analyticsBody');
+  const analyticsTotalCorrect = document.getElementById('analyticsTotalCorrect');
+  const analyticsTotalWrong = document.getElementById('analyticsTotalWrong');
+  const analyticsTotalScore = document.getElementById('analyticsTotalScore');
+
+  // Marking radio buttons
+  // (We’ll fetch these values on demand)
+  // For convenience, define helper functions to get the currently selected values
+  function getMarksPerQ() {
+    return parseFloat(document.querySelector('input[name="marksPerQ"]:checked').value);
+  }
+  function getNegativeMark() {
+    return parseFloat(document.querySelector('input[name="negative"]:checked').value);
+  }
+
+  // Show/hide step
+  function showStep(stepNumber) {
+    step1.classList.remove('active');
+    step2.classList.remove('active');
+    step3.classList.remove('active');
+    if (stepNumber === 1) step1.classList.add('active');
+    if (stepNumber === 2) step2.classList.add('active');
+    if (stepNumber === 3) step3.classList.add('active');
+  }
+
+  // Step transitions
+  toStep2Btn.addEventListener('click', () => {
+    // Basic validation
+    if (!reportDateInput.value) {
+      alert("Please select a report date.");
+      return;
+    }
+    if (!totalQuestionsInput.value || parseInt(totalQuestionsInput.value) < 0) {
+      alert("Please enter a valid Total Questions.");
+      return;
+    }
+    showStep(2);
+  });
+
+  backToStep1Btn.addEventListener('click', () => {
+    showStep(1);
+  });
+
+  toStep3Btn.addEventListener('click', () => {
+    // On going to Step 3, we first recalc all not attempted/incorrect
+    updateAllSubjects();
+    // Then generate analytics
+    generateAnalytics();
+    showStep(3);
+  });
+
+  backToStep2Btn.addEventListener('click', () => {
+    showStep(2);
+  });
+
+  // Auto-calc for Step 2
+  function updateSubject(subj) {
+    const totalQ = parseInt(totalQuestionsInput.value) || 0;
+    const attempted = parseInt(attemptedInputs[subj].value) || 0;
+    const correct = parseInt(correctInputs[subj].value) || 0;
+
+    // notAttempted = totalQ - attempted
+    const notAttempted = totalQ - attempted;
+    inattemptedOutputs[subj].value = notAttempted < 0 ? 0 : notAttempted;
+
+    // incorrect = attempted - correct
+    const incorrect = attempted - correct;
+    incorrectOutputs[subj].value = incorrect < 0 ? 0 : incorrect;
+  }
+
+  function updateAllSubjects() {
+    subjects.forEach(subj => updateSubject(subj));
+  }
+
+  // Listen for changes on Attempted/Correct
+  subjects.forEach(subj => {
+    attemptedInputs[subj].addEventListener('input', () => updateSubject(subj));
+    correctInputs[subj].addEventListener('input', () => updateSubject(subj));
+  });
+
+  // Step 3: Analytics
+  function generateAnalytics() {
+    // Clear existing rows
+    analyticsBody.innerHTML = '';
+    let totalCorrect = 0;
+    let totalWrong = 0;
+    let totalScore = 0;
+    const marksPerQ = getMarksPerQ();
+    const negativeMark = getNegativeMark();
+
+    subjects.forEach(subj => {
+      const correct = parseInt(correctInputs[subj].value) || 0;
+      const incorrect = parseInt(incorrectOutputs[subj].value) || 0;
+      const score = (correct * marksPerQ) - (incorrect * negativeMark);
+
+      totalCorrect += correct;
+      totalWrong += incorrect;
+      totalScore += score;
+
+      // Add row to analytics table
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${capitalize(subj)}</td>
+        <td>${correct}</td>
+        <td>${incorrect}</td>
+        <td>${score.toFixed(2)}</td>
+      `;
+      analyticsBody.appendChild(tr);
     });
 
-    // Update "Not Attempted" and "Incorrect" based on user input
-    function updateAutoFields(subject) {
-      const totalQ = parseInt(document.getElementById(`${subject}_totalQ`).value) || 0;
-      const attempted = parseInt(document.getElementById(`${subject}_attempted`).value) || 0;
-      const correct = parseInt(document.getElementById(`${subject}_correct`).value) || 0;
+    analyticsTotalCorrect.textContent = totalCorrect;
+    analyticsTotalWrong.textContent = totalWrong;
+    analyticsTotalScore.textContent = totalScore.toFixed(2);
+  }
 
-      // notAttempted = totalQ - attempted
-      const inattempted = totalQ - attempted;
-      document.getElementById(`${subject}_inattempted`).value = inattempted >= 0 ? inattempted : 0;
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 
-      // incorrect = attempted - correct
-      const incorrect = attempted - correct;
-      document.getElementById(`${subject}_incorrect`).value = incorrect >= 0 ? incorrect : 0;
+  // Save data to localStorage
+  const saveDataBtn = document.getElementById('saveDataBtn');
+  saveDataBtn.addEventListener('click', () => {
+    const dateVal = reportDateInput.value;
+    if (!dateVal) {
+      alert("Please select a date to save data.");
+      return;
     }
-
-    // Save data to localStorage, keyed by date
-    document.getElementById("saveDataBtn").addEventListener("click", () => {
-      const dateVal = document.getElementById("reportDate").value;
-      if (!dateVal) {
-        alert("Please select a date to save data.");
-        return;
-      }
-      const marksPerQ = document.querySelector('input[name="marksPerQ"]:checked').value;
-      const negativeMark = document.querySelector('input[name="negative"]:checked').value;
-
-      // Gather subject data
-      const data = {
-        marksPerQ,
-        negativeMark,
-        subjects: {}
+    // Gather everything
+    const data = {
+      date: dateVal,
+      totalQuestions: parseInt(totalQuestionsInput.value) || 0,
+      marksPerQ: getMarksPerQ(),
+      negativeMark: getNegativeMark(),
+      subjects: {}
+    };
+    subjects.forEach(subj => {
+      data.subjects[subj] = {
+        attempted: attemptedInputs[subj].value,
+        correct: correctInputs[subj].value
       };
-      subjects.forEach(subj => {
-        data.subjects[subj] = {
-          totalQ: document.getElementById(`${subj}_totalQ`).value,
-          attempted: document.getElementById(`${subj}_attempted`).value,
-          inattempted: document.getElementById(`${subj}_inattempted`).value,
-          correct: document.getElementById(`${subj}_correct`).value,
-          incorrect: document.getElementById(`${subj}_incorrect`).value
-        };
-      });
-
-      localStorage.setItem(`PTS_REPORT_${dateVal}`, JSON.stringify(data));
-      alert("Data saved for " + dateVal);
-      loadSavedDates(); // refresh the dropdown
     });
 
-    // Load data from localStorage
-    document.getElementById("loadDataBtn").addEventListener("click", () => {
-      const savedDatesSelect = document.getElementById("savedDates");
-      const selectedKey = savedDatesSelect.value;
-      if (!selectedKey) {
-        alert("No saved date selected!");
-        return;
-      }
-      const dataString = localStorage.getItem(selectedKey);
-      if (!dataString) {
-        alert("No data found for this date!");
-        return;
-      }
-      const data = JSON.parse(dataString);
+    localStorage.setItem(`PTS_REPORT_${dateVal}`, JSON.stringify(data));
+    alert("Data saved for " + dateVal);
+    loadSavedDates();
+  });
 
-      // Fill top bar
-      // Extract date from the key => after "PTS_REPORT_"
-      const dateVal = selectedKey.replace("PTS_REPORT_", "");
-      document.getElementById("reportDate").value = dateVal;
+  // Save as Image (step3) using html2canvas
+  const saveImageBtn = document.getElementById('saveImageBtn');
+  saveImageBtn.addEventListener('click', () => {
+    // We'll capture the entire container
+    const container = document.querySelector('.container');
+    html2canvas(container).then(canvas => {
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = "PTS_Report.png";
+      link.href = dataURL;
+      link.click();
+    });
+  });
 
-      // marksPerQ
-      const mpqRadios = document.querySelectorAll('input[name="marksPerQ"]');
-      mpqRadios.forEach(r => {
-        r.checked = (r.value === data.marksPerQ);
-      });
+  // Loading from localStorage
+  const savedDatesSelect = document.getElementById('savedDates');
+  const loadDataBtn = document.getElementById('loadDataBtn');
+  loadDataBtn.addEventListener('click', () => {
+    const selectedKey = savedDatesSelect.value;
+    if (!selectedKey) {
+      alert("No saved date selected!");
+      return;
+    }
+    const dataString = localStorage.getItem(selectedKey);
+    if (!dataString) {
+      alert("No data found for this date!");
+      return;
+    }
+    const data = JSON.parse(dataString);
 
-      // negativeMark
-      const negRadios = document.querySelectorAll('input[name="negative"]');
-      negRadios.forEach(r => {
-        r.checked = (r.value === data.negativeMark);
-      });
+    // Fill step 1
+    reportDateInput.value = data.date;
+    totalQuestionsInput.value = data.totalQuestions;
 
-      // subjects
-      subjects.forEach(subj => {
-        if (data.subjects[subj]) {
-          document.getElementById(`${subj}_totalQ`).value = data.subjects[subj].totalQ;
-          document.getElementById(`${subj}_attempted`).value = data.subjects[subj].attempted;
-          document.getElementById(`${subj}_inattempted`).value = data.subjects[subj].inattempted;
-          document.getElementById(`${subj}_correct`).value = data.subjects[subj].correct;
-          document.getElementById(`${subj}_incorrect`).value = data.subjects[subj].incorrect;
-        }
-      });
+    // marksPerQ
+    const mpqRadios = document.querySelectorAll('input[name="marksPerQ"]');
+    mpqRadios.forEach(r => r.checked = (parseFloat(r.value) === parseFloat(data.marksPerQ)));
+
+    // negativeMark
+    const negRadios = document.querySelectorAll('input[name="negative"]');
+    negRadios.forEach(r => r.checked = (parseFloat(r.value) === parseFloat(data.negativeMark)));
+
+    // step 2 subjects
+    subjects.forEach(subj => {
+      attemptedInputs[subj].value = data.subjects[subj].attempted;
+      correctInputs[subj].value = data.subjects[subj].correct;
+      updateSubject(subj);
     });
 
-    // Populate savedDates dropdown
-    function loadSavedDates() {
-      const savedDatesSelect = document.getElementById("savedDates");
-      savedDatesSelect.innerHTML = '<option value="">--Select--</option>';
+    // Move to step 2 (or step 3 if you like)
+    showStep(2);
+    alert("Data loaded for " + data.date);
+  });
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith("PTS_REPORT_")) {
-          const opt = document.createElement("option");
-          opt.value = key;
-          opt.textContent = key.replace("PTS_REPORT_", "");
-          savedDatesSelect.appendChild(opt);
-        }
+  // On load, populate savedDates
+  window.addEventListener('load', () => {
+    loadSavedDates();
+  });
+
+  function loadSavedDates() {
+    savedDatesSelect.innerHTML = '<option value="">-- Select --</option>';
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("PTS_REPORT_")) {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = key.replace("PTS_REPORT_", "");
+        savedDatesSelect.appendChild(opt);
       }
     }
-
-    // Save as image using html2canvas
-    document.getElementById("saveImageBtn").addEventListener("click", () => {
-      const reportCard = document.getElementById("reportCard");
-      html2canvas(reportCard).then(canvas => {
-        const dataURL = canvas.toDataURL("image/png");
-        // Create a temporary link to download
-        const link = document.createElement("a");
-        link.download = "PTS_Report.png";
-        link.href = dataURL;
-        link.click();
-      });
-    });
-  </script>
+  }
+</script>
 </body>
-  </html>
-  
+</html>
