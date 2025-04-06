@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PTS Report Card</title>
+  <!-- Minimal Material-like styling -->
+  <style>
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: "Roboto", sans-serif;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    h1 {
+      margin: 0 0 1rem;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .top-bar label {
+      font-weight: 500;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subject-container {
+      display: flex;
+      overflow-x: auto; /* horizontal scroll */
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+
+    .subject-card {
+      background: #fff;
+      border-radius: 8px;
+      min-width: 320px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1rem;
+      flex-shrink: 0;
+    }
+
+    .subject-card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    table th, table td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+
+    .bottom-bar {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      background-color: #6200ee;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    select, input[type="number"], input[type="date"] {
+      padding: 0.3rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+    }
+
+    .inline {
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    /* Small styling for the “Material toggle” feel */
+    .toggle-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .toggle-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      cursor: pointer;
+    }
+
+    .toggle-group input[type="radio"] {
+      margin: 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>PTS Report Card</h1>
+  <!-- Top bar: date, breadcrumbs, marks per question, negative marking -->
+  <div class="top-bar">
+    <!-- Date (for saving) -->
+    <div>
+      <label for="reportDate">Report Date:</label>
+      <input type="date" id="reportDate" />
+    </div>
+
+    <!-- Breadcrumb / previously saved data -->
+    <div class="breadcrumb">
+      <label for="savedDates">Saved Reports:</label>
+      <select id="savedDates">
+        <option value="">--Select--</option>
+      </select>
+      <button id="loadDataBtn">Load</button>
+    </div>
+
+    <!-- Marks per question -->
+    <div class="toggle-group">
+      <span>Marks/Question:</span>
+      <label><input type="radio" name="marksPerQ" value="2" checked />2</label>
+      <label><input type="radio" name="marksPerQ" value="3" />3</label>
+    </div>
+
+    <!-- Negative marking -->
+    <div class="toggle-group">
+      <span>Negative Marking:</span>
+      <label><input type="radio" name="negative" value="0.5" />1/2</label>
+      <label><input type="radio" name="negative" value="0.3333" />1/3</label>
+      <label><input type="radio" name="negative" value="0.25" />1/4</label>
+      <label><input type="radio" name="negative" value="0" checked />None</label>
+    </div>
+  </div>
+
+  <!-- Horizontal scroll container for subjects -->
+  <div class="subject-container" id="reportCard">
+    <!-- MATHS -->
+    <div class="subject-card">
+      <h2>Maths</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Questions</td>
+            <td><input type="number" id="maths_totalQ" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Attempted</td>
+            <td><input type="number" id="maths_attempted" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Not Attempted</td>
+            <td><input type="number" id="maths_inattempted" value="0" min="0" readonly /></td>
+          </tr>
+          <tr>
+            <td>Correct</td>
+            <td><input type="number" id="maths_correct" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Incorrect</td>
+            <td><input type="number" id="maths_incorrect" value="0" min="0" readonly /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ENGLISH -->
+    <div class="subject-card">
+      <h2>English</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Questions</td>
+            <td><input type="number" id="english_totalQ" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Attempted</td>
+            <td><input type="number" id="english_attempted" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Not Attempted</td>
+            <td><input type="number" id="english_inattempted" value="0" min="0" readonly /></td>
+          </tr>
+          <tr>
+            <td>Correct</td>
+            <td><input type="number" id="english_correct" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Incorrect</td>
+            <td><input type="number" id="english_incorrect" value="0" min="0" readonly /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- GK/GS -->
+    <div class="subject-card">
+      <h2>GK/GS</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Questions</td>
+            <td><input type="number" id="gk_totalQ" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Attempted</td>
+            <td><input type="number" id="gk_attempted" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Not Attempted</td>
+            <td><input type="number" id="gk_inattempted" value="0" min="0" readonly /></td>
+          </tr>
+          <tr>
+            <td>Correct</td>
+            <td><input type="number" id="gk_correct" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Incorrect</td>
+            <td><input type="number" id="gk_incorrect" value="0" min="0" readonly /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- REASONING -->
+    <div class="subject-card">
+      <h2>Reasoning</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Questions</td>
+            <td><input type="number" id="reasoning_totalQ" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Attempted</td>
+            <td><input type="number" id="reasoning_attempted" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Not Attempted</td>
+            <td><input type="number" id="reasoning_inattempted" value="0" min="0" readonly /></td>
+          </tr>
+          <tr>
+            <td>Correct</td>
+            <td><input type="number" id="reasoning_correct" value="0" min="0" /></td>
+          </tr>
+          <tr>
+            <td>Incorrect</td>
+            <td><input type="number" id="reasoning_incorrect" value="0" min="0" readonly /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bottom bar: Save data, Save as image -->
+  <div class="bottom-bar">
+    <button id="saveDataBtn">Save Data</button>
+    <button id="saveImageBtn">Save as Image</button>
+  </div>
+
+  <!-- html2canvas for screenshot -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    // A small helper to list all subject fields in a structured way
+    const subjects = ["maths", "english", "gk", "reasoning"];
+
+    // On page load, populate the savedDates dropdown from localStorage
+    window.addEventListener("load", () => {
+      loadSavedDates();
+      // Attach listeners to auto-calculate "Not Attempted" and "Incorrect"
+      subjects.forEach(subj => {
+        document.getElementById(`${subj}_totalQ`).addEventListener("input", () => updateAutoFields(subj));
+        document.getElementById(`${subj}_attempted`).addEventListener("input", () => updateAutoFields(subj));
+        document.getElementById(`${subj}_correct`).addEventListener("input", () => updateAutoFields(subj));
+      });
+    });
+
+    // Update "Not Attempted" and "Incorrect" based on user input
+    function updateAutoFields(subject) {
+      const totalQ = parseInt(document.getElementById(`${subject}_totalQ`).value) || 0;
+      const attempted = parseInt(document.getElementById(`${subject}_attempted`).value) || 0;
+      const correct = parseInt(document.getElementById(`${subject}_correct`).value) || 0;
+
+      // notAttempted = totalQ - attempted
+      const inattempted = totalQ - attempted;
+      document.getElementById(`${subject}_inattempted`).value = inattempted >= 0 ? inattempted : 0;
+
+      // incorrect = attempted - correct
+      const incorrect = attempted - correct;
+      document.getElementById(`${subject}_incorrect`).value = incorrect >= 0 ? incorrect : 0;
+    }
+
+    // Save data to localStorage, keyed by date
+    document.getElementById("saveDataBtn").addEventListener("click", () => {
+      const dateVal = document.getElementById("reportDate").value;
+      if (!dateVal) {
+        alert("Please select a date to save data.");
+        return;
+      }
+      const marksPerQ = document.querySelector('input[name="marksPerQ"]:checked').value;
+      const negativeMark = document.querySelector('input[name="negative"]:checked').value;
+
+      // Gather subject data
+      const data = {
+        marksPerQ,
+        negativeMark,
+        subjects: {}
+      };
+      subjects.forEach(subj => {
+        data.subjects[subj] = {
+          totalQ: document.getElementById(`${subj}_totalQ`).value,
+          attempted: document.getElementById(`${subj}_attempted`).value,
+          inattempted: document.getElementById(`${subj}_inattempted`).value,
+          correct: document.getElementById(`${subj}_correct`).value,
+          incorrect: document.getElementById(`${subj}_incorrect`).value
+        };
+      });
+
+      localStorage.setItem(`PTS_REPORT_${dateVal}`, JSON.stringify(data));
+      alert("Data saved for " + dateVal);
+      loadSavedDates(); // refresh the dropdown
+    });
+
+    // Load data from localStorage
+    document.getElementById("loadDataBtn").addEventListener("click", () => {
+      const savedDatesSelect = document.getElementById("savedDates");
+      const selectedKey = savedDatesSelect.value;
+      if (!selectedKey) {
+        alert("No saved date selected!");
+        return;
+      }
+      const dataString = localStorage.getItem(selectedKey);
+      if (!dataString) {
+        alert("No data found for this date!");
+        return;
+      }
+      const data = JSON.parse(dataString);
+
+      // Fill top bar
+      // Extract date from the key => after "PTS_REPORT_"
+      const dateVal = selectedKey.replace("PTS_REPORT_", "");
+      document.getElementById("reportDate").value = dateVal;
+
+      // marksPerQ
+      const mpqRadios = document.querySelectorAll('input[name="marksPerQ"]');
+      mpqRadios.forEach(r => {
+        r.checked = (r.value === data.marksPerQ);
+      });
+
+      // negativeMark
+      const negRadios = document.querySelectorAll('input[name="negative"]');
+      negRadios.forEach(r => {
+        r.checked = (r.value === data.negativeMark);
+      });
+
+      // subjects
+      subjects.forEach(subj => {
+        if (data.subjects[subj]) {
+          document.getElementById(`${subj}_totalQ`).value = data.subjects[subj].totalQ;
+          document.getElementById(`${subj}_attempted`).value = data.subjects[subj].attempted;
+          document.getElementById(`${subj}_inattempted`).value = data.subjects[subj].inattempted;
+          document.getElementById(`${subj}_correct`).value = data.subjects[subj].correct;
+          document.getElementById(`${subj}_incorrect`).value = data.subjects[subj].incorrect;
+        }
+      });
+    });
+
+    // Populate savedDates dropdown
+    function loadSavedDates() {
+      const savedDatesSelect = document.getElementById("savedDates");
+      savedDatesSelect.innerHTML = '<option value="">--Select--</option>';
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("PTS_REPORT_")) {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = key.replace("PTS_REPORT_", "");
+          savedDatesSelect.appendChild(opt);
+        }
+      }
+    }
+
+    // Save as image using html2canvas
+    document.getElementById("saveImageBtn").addEventListener("click", () => {
+      const reportCard = document.getElementById("reportCard");
+      html2canvas(reportCard).then(canvas => {
+        const dataURL = canvas.toDataURL("image/png");
+        // Create a temporary link to download
+        const link = document.createElement("a");
+        link.download = "PTS_Report.png";
+        link.href = dataURL;
+        link.click();
+      });
+    });
+  </script>
+</body>
+  </html>
+  
